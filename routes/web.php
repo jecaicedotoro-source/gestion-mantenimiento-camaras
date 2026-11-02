@@ -8,11 +8,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
-    
-Route::livewire('admin/users', 'pages::admin.users.index')
-    ->middleware('can:manage-users')
-    ->name('admin.users.index');
-
+    Route::livewire('admin/users', 'pages::admin.users.index')
+            ->middleware('can:manage-users')
+            ->name('admin.users.index');
 
 });
 
