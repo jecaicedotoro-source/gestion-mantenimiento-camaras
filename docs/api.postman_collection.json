@@ -1,0 +1,719 @@
+{
+  "info": {
+    "name": "USC · Inventario e incidencias · MVP Módulo 3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "COLECCIÓN PREPARADA, NO EJECUTADA EN POSTMAN EN ESTA ENTREGA. Las pruebas HTTP ejecutadas corresponden a Laravel/Pest y están documentadas en docs/evidencias.md. Contrato: docs/api.md.\n\n1. Inicia la aplicación en un entorno de demostración. Esta colección crea registros sintéticos y conserva su trazabilidad; no borra datos.\n2. base_url predeterminada: http://localhost:8000/api (sin barra final). Configura token solo como secreto local del entorno de Postman; la colección exportada lo deja vacío. Usa el valor del token sin el prefijo Bearer. No lo incluyas en capturas ni exportaciones. Se requiere cuenta activa, verificada y rol administrador/coordinador para ejecutar todos los registros de cámaras.\n3. Ejecuta las carpetas en orden. Los scripts capturan identificadores, una serie sintética UUID y la huella de la vista previa; nunca capturan ni imprimen tokens. Los identificadores autogestionados se guardan en variables de colección: evita sobreescribirlos en el entorno.\n4. La petición OpenAI se OMITE por defecto: enable_live_ai=false. Solo después de revisar la descripción minimizada, la cuenta/modelo y el costo, configura enable_live_ai=true. También debe estar habilitada/configurada OpenAI en Laravel. Habilitar esta variable autoriza una solicitud real desde la colección; una respuesta 503 indica indisponibilidad, no conexión verificada.\n5. La decisión humana también se omite por defecto. Revisa el resultado y elige human_confirmation_mode=manual, aceptar o corregir; configura human_category para manual/corregir y enable_human_confirmation=true. No se confirma automáticamente ninguna sugerencia de IA. El modo aceptar usa la categoría sugerida que la persona revisó.\n6. Casos negativos son opcionales: enable_negative_tests=false por defecto. La serie positiva se genera de nuevo al registrar cada cámara para permitir repetir la demostración. El negativo de duplicado reutiliza expresamente la serie capturada de esa cámara.\n7. Se requiere una versión de Postman que admita pm.execution.skipRequest() en scripts previos (cliente/Collection Runner/Postman CLI). No ejecutar con herramientas que ignoren estos scripts. Documentación oficial: https://learning.postman.com/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-execution .\n\nNo hay ejemplos de respuesta fabricados ni credenciales incluidas. Catálogo provisional: conectividad, alimentacion, imagen, hardware, configuracion, otra. Los permisos/categorías provisionales requieren validación institucional."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string",
+      "description": "Base API de demostración, sin barra final."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "VACÍO en exportación. Configurar únicamente como secreto local del entorno Postman."
+    },
+    {
+      "key": "camera_id",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "incident_id",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "suggestion_id",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "approved_input_hash",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "demo_serial",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "suggested_category",
+      "value": "",
+      "type": "string",
+      "description": "Valor sintético capturado automáticamente por los scripts; no contiene tokens."
+    },
+    {
+      "key": "enable_live_ai",
+      "value": "false",
+      "type": "string",
+      "description": "Solo true permite una solicitud real a OpenAI; revisar texto y costo antes."
+    },
+    {
+      "key": "enable_human_confirmation",
+      "value": "false",
+      "type": "string",
+      "description": "Solo true permite guardar una decisión humana después de revisarla."
+    },
+    {
+      "key": "human_confirmation_mode",
+      "value": "",
+      "type": "string",
+      "description": "Elegir expresamente: manual, aceptar o corregir."
+    },
+    {
+      "key": "human_category",
+      "value": "",
+      "type": "string",
+      "description": "Categoría elegida por la persona para modo manual/corregir."
+    },
+    {
+      "key": "reviewed_suggestion_id",
+      "value": "",
+      "type": "string",
+      "description": "Para aceptar/corregir: copiar suggestion_id solo después de revisar esa propuesta. Impide aceptar automáticamente una propuesta nueva en Run Collection."
+    },
+    {
+      "key": "enable_negative_tests",
+      "value": "false",
+      "type": "string",
+      "description": "Solo true habilita los tres casos negativos opcionales."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const base = String(pm.variables.get('base_url') || '').replace(/\\/+$/, '');",
+          "if (!/^https?:\\/\\//.test(base)) { console.info('Solicitud omitida: configura base_url.'); pm.execution.skipRequest(); }",
+          "pm.variables.set('base_url', base);",
+          "const withoutAuth = pm.request.auth && pm.request.auth.type === 'noauth';",
+          "if (!withoutAuth && !String(pm.variables.get('token') || '').trim()) { console.info('Solicitud omitida: configura el token únicamente en un secreto local de Postman.'); pm.execution.skipRequest(); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 · CU-01 · Cámaras",
+      "description": "Registra una cámara sintética, consulta el listado y comprueba su persistencia. La serie se genera con UUID en cada registro; el código de inventario DEMO-01 puede repetirse por regla institucional.",
+      "item": [
+        {
+          "name": "Registrar cámara sintética · 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo_inventario\": \"DEMO-01\",\n  \"numero_serie\": \"{{demo_serial}}\",\n  \"marca\": \"Demostración\",\n  \"modelo\": \"MVP\",\n  \"tipo\": \"IP\",\n  \"direccion_ip\": \"192.0.2.10\",\n  \"ubicacion\": \"Laboratorio de demostración\",\n  \"estado\": \"activo\",\n  \"observaciones\": \"Datos sintéticos para evaluación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/cameras",
+            "description": "Administrador/coordinador. Genera una serie nueva y captura camera_id; reinicia identificadores de la demostración para no reutilizar datos anteriores."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('demo_serial', 'SERIE-DEMO-' + pm.variables.replaceIn('{{$guid}}'));",
+                "['camera_id', 'incident_id', 'suggestion_id', 'approved_input_hash', 'suggested_category', 'reviewed_suggestion_id'].forEach(function (key) { pm.collectionVariables.set(key, ''); });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cámara registrada con HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Persistencia: identificador y serie devueltos', function () {",
+                  "    pm.expect(body.data.id).to.be.a('number').and.above(0);",
+                  "    pm.expect(body.data.numero_serie).to.eql(pm.variables.get('demo_serial'));",
+                  "    pm.expect(body.data.direccion_ip).to.eql('192.0.2.10');",
+                  "  });",
+                  "  pm.collectionVariables.set('camera_id', String(body.data.id));",
+                  "  pm.collectionVariables.set('demo_serial', body.data.numero_serie);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listar y buscar cámaras · 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/cameras?search=DEMO&page=1",
+            "description": "Cuatro roles institucionales. Consulta paginación real y filtro por código/serie/ubicación."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listado con HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Listado paginado de diez registros', function () {",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    pm.expect(body.current_page).to.eql(1);",
+                  "    pm.expect(body.per_page).to.eql(10);",
+                  "    pm.expect(body.total).to.be.a('number');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consultar cámara registrada · 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/cameras/{{camera_id}}",
+            "description": "Comprueba que la cámara creada sigue disponible en una petición distinta."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('camera_id') || ''))) { console.info('Solicitud omitida: falta camera_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Consulta individual con HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Identificador y serie coinciden con el registro', function () {",
+                  "    pm.expect(String(body.data.id)).to.eql(String(pm.variables.get('camera_id')));",
+                  "    pm.expect(body.data.numero_serie).to.eql(pm.variables.get('demo_serial'));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 · Incidencias · Registro y vista previa",
+      "description": "No consulta OpenAI. Registra síntomas sintéticos, consulta la incidencia y obtiene la descripción minimizada para revisión humana.",
+      "item": [
+        {
+          "name": "Registrar incidencia sintética · 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"camera_id\": \"{{camera_id}}\",\n  \"description\": \"La imagen de la cámara se ve borrosa de forma permanente y presenta cortes intermitentes.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/v1/incidencias",
+            "description": "Administrador/coordinador/técnico. La categoría confirmada debe quedar vacía hasta una decisión humana."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('camera_id') || ''))) { console.info('Solicitud omitida: falta camera_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }",
+                  "pm.request.body.update(JSON.stringify({ camera_id: Number(pm.variables.get('camera_id')), description: 'La imagen de la cámara se ve borrosa de forma permanente y presenta cortes intermitentes.' }, null, 2));",
+                  "['incident_id', 'suggestion_id', 'approved_input_hash', 'suggested_category'].forEach(function (key) { pm.collectionVariables.set(key, ''); });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Incidencia registrada con HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('La IA no confirma la categoría al registrar', function () {",
+                  "    pm.expect(body.data.confirmed_category).to.eql(null);",
+                  "    pm.expect(body.data.confirmed_by).to.eql(null);",
+                  "    pm.expect(body.data.review_status).to.eql('pendiente');",
+                  "  });",
+                  "  pm.collectionVariables.set('incident_id', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consultar incidencia · 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/v1/incidencias/{{incident_id}}",
+            "description": "Cuatro roles institucionales. Devuelve estado, categoría confirmada y responsable de revisión, si existen."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('incident_id') || ''))) { console.info('Solicitud omitida: falta incident_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Incidencia consultada con HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Identificador persistido y estado presentes', function () {",
+                  "    pm.expect(String(body.data.id)).to.eql(String(pm.variables.get('incident_id')));",
+                  "    pm.expect(body.data).to.have.property('review_status');",
+                  "    pm.expect(body.data).to.have.property('confirmed_category');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Obtener vista previa minimizada · 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/v1/incidencias/{{incident_id}}/sugerencias-ia/vista-previa",
+            "description": "No envía datos a OpenAI ni genera costo de proveedor. Revisa description antes de habilitar la carpeta de clasificación real. El hash solo valida que se envíe el texto revisado; no reemplaza su revisión."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('incident_id') || ''))) { console.info('Solicitud omitida: falta incident_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Vista previa con HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Descripción y huella SHA-256 presentes', function () {",
+                  "    pm.expect(body.data.description).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.approved_input_hash).to.match(/^[a-f0-9]{64}$/);",
+                  "  });",
+                  "  pm.collectionVariables.set('approved_input_hash', body.data.approved_input_hash);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 · OpenAI: genera costo si habilitado",
+      "description": "OMITIDA POR DEFECTO. enable_live_ai debe ser exactamente true después de revisar la vista previa. Requiere configuración OpenAI válida en Laravel; esta colección nunca incluye la clave del proveedor. Se envían únicamente síntomas sintéticos minimizados. No guarda una categoría confirmada.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (String(pm.variables.get('enable_live_ai')) !== 'true') { console.info('OpenAI omitido: enable_live_ai=false. No se envía la solicitud de clasificación.'); pm.execution.skipRequest(); }"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Solicitar sugerencia real supervisada · 201 o 503",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_input_hash\": \"{{approved_input_hash}}\",\n  \"consent\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/v1/incidencias/{{incident_id}}/sugerencias-ia",
+            "description": "Puede generar costo real. consent=true expresa la autorización de la persona que habilitó enable_live_ai tras revisar el texto. 503 conserva alternativa manual; no equivale a prueba real exitosa."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('incident_id') || ''))) { console.info('Solicitud omitida: falta incident_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }",
+                  "if (!/^[a-f0-9]{64}$/.test(String(pm.variables.get('approved_input_hash') || ''))) { console.info('Solicitud omitida: falta una vista previa válida.'); pm.execution.skipRequest(); }",
+                  "pm.collectionVariables.set('suggestion_id', '');",
+                  "pm.collectionVariables.set('suggested_category', '');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta documentada de clasificación', function () { pm.expect([201, 503]).to.include(pm.response.code); });",
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Sugerencia pendiente de decisión humana', function () {",
+                  "    pm.expect(body.data.status).to.eql('sugerida');",
+                  "    pm.expect(['conectividad', 'alimentacion', 'imagen', 'hardware', 'configuracion', 'otra']).to.include(body.data.suggested_category);",
+                  "    pm.expect(body.data.explanation).to.be.a('string').and.not.empty;",
+                  "    pm.expect(String(body.data.incident_id)).to.eql(String(pm.variables.get('incident_id')));",
+                  "  });",
+                  "  pm.collectionVariables.set('suggestion_id', String(body.data.id));",
+                  "  pm.collectionVariables.set('suggested_category', body.data.suggested_category);",
+                  "} else if (pm.response.code === 503) {",
+                  "  pm.test('Proveedor no disponible: alternativa manual habilitada', function () { pm.expect(pm.response.json().manual_available).to.eql(true); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 · Decisión humana explícita",
+      "description": "OMITIDA POR DEFECTO para impedir que Run Collection confirme una propuesta automáticamente. Revisa primero la sugerencia y elige human_confirmation_mode (manual/aceptar/corregir), human_category para manual/corregir y enable_human_confirmation=true. Para aceptar/corregir, copia además el suggestion_id revisado en reviewed_suggestion_id y envía únicamente esta petición; una ejecución nueva de toda la colección reinicia esa revisión. Cada incidencia admite una sola decisión final en este MVP.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (String(pm.variables.get('enable_human_confirmation')) !== 'true') { console.info('Decisión humana omitida: requiere revisión y habilitación expresa.'); pm.execution.skipRequest(); }"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Guardar categoría revisada · 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"{{human_category}}\",\n  \"suggestion_id\": \"{{suggestion_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/v1/incidencias/{{incident_id}}/categoria",
+            "description": "Modo manual omite suggestion_id. Aceptar usa la categoría sugerida revisada; corregir exige una categoría diferente. El servidor valida que la sugerencia sea vigente y pertenezca a la incidencia."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get('incident_id') || ''))) { console.info('Solicitud omitida: falta incident_id; ejecuta antes el registro correspondiente.'); pm.execution.skipRequest(); }",
+                  "const mode = String(pm.variables.get('human_confirmation_mode') || '');",
+                  "const categories = ['conectividad', 'alimentacion', 'imagen', 'hardware', 'configuracion', 'otra'];",
+                  "if (!['manual', 'aceptar', 'corregir'].includes(mode)) { console.info('Solicitud omitida: elige explícitamente human_confirmation_mode.'); pm.execution.skipRequest(); }",
+                  "const category = mode === 'aceptar' ? String(pm.variables.get('suggested_category') || '') : String(pm.variables.get('human_category') || '');",
+                  "if (!categories.includes(category)) { console.info('Solicitud omitida: falta una categoría revisada válida.'); pm.execution.skipRequest(); }",
+                  "const payload = { category: category };",
+                  "if (mode !== 'manual') {",
+                  "  const suggestionId = String(pm.variables.get('suggestion_id') || '');",
+                  "  if (!/^\\d+$/.test(suggestionId)) { console.info('Solicitud omitida: no hay sugerencia vigente capturada.'); pm.execution.skipRequest(); }",
+                    "  if (String(pm.variables.get('reviewed_suggestion_id') || '') !== suggestionId) { console.info('Solicitud omitida: revisa la propuesta actual y copia suggestion_id en reviewed_suggestion_id.'); pm.execution.skipRequest(); }",
+                  "  if (mode === 'corregir' && category === String(pm.variables.get('suggested_category'))) { console.info('Solicitud omitida: para corregir elige una categoría distinta de la sugerida.'); pm.execution.skipRequest(); }",
+                  "  payload.suggestion_id = Number(suggestionId);",
+                  "}",
+                  "pm.variables.set('_expected_human_category', category);",
+                  "pm.request.body.update(JSON.stringify(payload, null, 2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Decisión humana guardada con HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Categoría, responsable, fecha y estado revisados', function () {",
+                  "    pm.expect(body.data.confirmed_category).to.eql(pm.variables.get('_expected_human_category'));",
+                  "    pm.expect(body.data.confirmed_by).to.be.a('number');",
+                  "    pm.expect(body.data.confirmed_at).to.be.a('string').and.not.empty;",
+                  "    pm.expect(['manual', 'aceptada', 'corregida']).to.include(body.data.review_status);",
+                  "  });",
+                  "  pm.collectionVariables.set('enable_human_confirmation', 'false');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 · Casos negativos opcionales",
+      "description": "OMITIDOS POR DEFECTO. Configura enable_negative_tests=true. No publican tokens ni crean una cámara válida: validan 401 y errores 422. El caso de serie duplicada necesita la cámara positiva registrada en esta ejecución.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (String(pm.variables.get('enable_negative_tests')) !== 'true') { console.info('Casos negativos omitidos: enable_negative_tests=false.'); pm.execution.skipRequest(); }"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Visitante sin token · 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{base_url}}/cameras",
+            "description": "Ignora la autenticación heredada para verificar rechazo a un visitante."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Visitante rechazado con HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Rechazar dirección IP inválida · 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo_inventario\": \"DEMO-01\",\n  \"numero_serie\": null,\n  \"marca\": \"Demostración\",\n  \"modelo\": \"MVP\",\n  \"tipo\": \"IP\",\n  \"direccion_ip\": \"999.999.999.999\",\n  \"ubicacion\": \"Laboratorio de demostración\",\n  \"estado\": \"activo\",\n  \"observaciones\": \"Datos sintéticos para evaluación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/cameras",
+            "description": "Usa serie null para que el error comprobado sea la dirección IP; no reutiliza accidentalmente una serie positiva fija."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('IP inválida rechazada con HTTP 422', function () { pm.response.to.have.status(422); });",
+                  "if (pm.response.code === 422) { pm.test('Error por direccion_ip', function () { pm.expect(pm.response.json().errors).to.have.property('direccion_ip'); }); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Rechazar serie duplicada de esta demostración · 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo_inventario\": \"DEMO-01\",\n  \"numero_serie\": \"{{demo_serial}}\",\n  \"marca\": \"Demostración\",\n  \"modelo\": \"MVP\",\n  \"tipo\": \"IP\",\n  \"direccion_ip\": \"192.0.2.10\",\n  \"ubicacion\": \"Laboratorio de demostración\",\n  \"estado\": \"activo\",\n  \"observaciones\": \"Datos sintéticos para evaluación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/cameras",
+            "description": "Reutiliza deliberadamente demo_serial capturada del registro positivo. El código de inventario repetido es válido; la serie es la restricción comprobada."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!String(pm.variables.get('demo_serial') || '').startsWith('SERIE-DEMO-')) { console.info('Solicitud omitida: registra antes una cámara sintética para probar el duplicado.'); pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Serie duplicada rechazada con HTTP 422', function () { pm.response.to.have.status(422); });",
+                  "if (pm.response.code === 422) { pm.test('Error por numero_serie', function () { pm.expect(pm.response.json().errors).to.have.property('numero_serie'); }); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -34,7 +34,7 @@ final class CameraValidationRules
                     'fuera_de_servicio',
                 ]),
             ],
-            'observaciones' => ['nullable', 'string'],
+            'observaciones' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

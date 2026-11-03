@@ -47,7 +47,13 @@ Se añadieron 22 pruebas de usuarios y se adaptaron las de perfil. La ejecución
 
 ## API HTTP
 
-Base existente: `GET /api/cameras` y `POST /api/cameras`, con `auth:sanctum` y permisos por rol. La documentación completa y una colección sin credenciales se incorporarán en el bloque CU-01.
+CU-01 está implementado mediante formulario Livewire, `CameraRegistrationService` y API Sanctum: `GET /api/cameras`, `POST /api/cameras` y `GET /api/cameras/{id}`. La consulta admite búsqueda y paginación. Todas las rutas exigen cuenta activa y correo verificado; solo administrador/coordinador registran cámaras.
+
+Se valida IP opcional, campos obligatorios y longitudes. El inventario puede repetirse y la serie opcional es única; blancos opcionales se convierten en `null`. La restricción de SQLite resuelve también conflictos simultáneos. No se introduce activo fijo como requisito adicional.
+
+Consultar [rutas, validaciones, ejemplos y códigos HTTP](docs/api.md), [colección Postman sin credenciales](docs/api.postman_collection.json) y la colección Bruno heredada en `USC - Inventario de Cámaras/`. Postman está preparado y sus scripts fueron validados; no se declara una ejecución real desde esa aplicación. Las peticiones OpenAI y las confirmaciones se omiten por defecto y requieren activación/revisión explícita.
+
+Las pruebas verifican registro desde Livewire, persistencia, consulta individual, búsquedas, duplicados, valores ausentes, correo verificado, roles y errores. Los ejemplos de documentación son datos ficticios, no inventario institucional.
 
 ## Inteligencia artificial
 

@@ -15,7 +15,7 @@ new class extends Component {
     public string $estado = 'activo';
     public string $observaciones = '';
 
-    public function mount(): void
+    public function boot(): void
     {
         Gate::authorize('create-cameras');
     }
@@ -64,6 +64,21 @@ new class extends Component {
 
     <form wire:submit="save" class="space-y-6">
 
+        <p class="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-100">
+            El código de inventario puede repetirse. El número de serie es opcional y debe ser único cuando se proporciona.
+        </p>
+
+        @if ($errors->any())
+            <div role="alert" class="rounded-xl border border-red-300 p-4 text-sm text-red-700 dark:text-red-300">
+                <p class="font-semibold">Revisa los datos antes de guardar:</p>
+                <ul class="mt-2 list-disc pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="grid gap-5 md:grid-cols-2">
 
             <flux:input label="Código de inventario" wire:model="codigo_inventario" required />
@@ -97,7 +112,9 @@ new class extends Component {
 
         <flux:textarea label="Observaciones" wire:model="observaciones" rows="3" />
 
-        <div class="flex justify-end">
+        <div class="flex flex-wrap items-center justify-end gap-3">
+            <span role="status" wire:loading wire:target="save" class="text-sm text-zinc-600 dark:text-zinc-300">Guardando cámara…</span>
+            <flux:button :href="route('cameras.index')" wire:navigate>Consultar inventario</flux:button>
             <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
                 Guardar cámara
             </flux:button>
