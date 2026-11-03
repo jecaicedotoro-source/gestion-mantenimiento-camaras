@@ -9,7 +9,7 @@ final class UserPolicy
 {
     public function viewAny(User $actor): bool
     {
-        return $actor->is_active && $actor->hasVerifiedEmail()
+        return $actor->is_active
             && $actor->role?->code === 'administrador';
     }
 
@@ -36,7 +36,7 @@ final class UserPolicy
     public function deactivateOwn(User $actor, User $target): bool
     {
         // Los administradores deben conservar acceso y recurrir a otro administrador.
-        return $actor->is($target) && $actor->is_active && $actor->hasVerifiedEmail()
+        return $actor->is($target) && $actor->is_active
             && $actor->role?->code !== 'administrador';
     }
 

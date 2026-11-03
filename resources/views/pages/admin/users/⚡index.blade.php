@@ -394,7 +394,7 @@ new class extends Component {
                     <th class="p-3">Nombre</th>
                     <th class="p-3">Correo electrónico</th>
                     <th class="p-3">Rol</th>
-                    <th class="p-3">Verificación</th><th class="p-3">Estado</th>
+                    <th class="p-3">Estado</th>
                     <th class="p-3">Acciones</th>
                 </tr>
 
@@ -417,19 +417,6 @@ new class extends Component {
                             {{ $user->role?->name ?? 'Sin rol' }}
                         </td>
 
-                        <td class="p-3">
-
-                            @if ($user->hasVerifiedEmail())
-                                <span class="text-green-600 dark:text-green-400">
-                                    Verificado
-                                </span>
-                            @else
-                                <span class="text-amber-600 dark:text-amber-400">
-                                    Pendiente
-                                </span>
-                            @endif
-
-                        </td>
 
                         <td class="p-3">
                             <span class="{{ $user->is_active ? 'text-teal-700 dark:text-teal-300' : 'text-amber-700 dark:text-amber-300' }}">{{ $user->is_active ? 'Activo' : 'Desactivado' }}</span>
@@ -464,7 +451,7 @@ new class extends Component {
                 @empty
 
                     <tr>
-                        <td colspan="6" class="p-6 text-center text-zinc-500">
+                        <td colspan="5" class="p-6 text-center text-zinc-500">
                             No se encontraron usuarios.
                         </td>
                     </tr>

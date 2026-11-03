@@ -59,12 +59,12 @@ test('API consulta individual y búsqueda devuelven el registro persistido', fun
     $this->getJson('/api/cameras/99999')->assertNotFound();
 });
 
-test('API exige verificación del correo y no admite datos arbitrarios', function () {
+test('API permite registrar cámaras sin confirmación de correo al administrador activo', function () {
     $admin = completeCameraAdmin();
     $admin->forceFill(['email_verified_at' => null])->save();
     Sanctum::actingAs($admin);
-    $this->postJson('/api/cameras', completeCameraPayload())->assertForbidden();
-    expect(Camera::count())->toBe(0);
+    $this->postJson('/api/cameras', completeCameraPayload())->assertCreated();
+    expect(Camera::count())->toBe(1);
 });
 
 test('API valida estado longitud e IP y no filtra datos internos del usuario', function () {

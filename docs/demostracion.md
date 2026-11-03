@@ -64,7 +64,7 @@ El código de inventario no es una clave única. El número de serie, cuando se 
 
 ## Escena 3 API y persistencia
 
-Preparar un cliente Postman, Bruno u otra herramienta HTTP y configurar la URL local. Usar un token Sanctum de una cuenta activa, verificada y con el permiso necesario, guardado como secreto del cliente. Su creación y revocación son responsabilidad del operador; no incluir el token en la colección exportada ni en la grabación. Todos los ejemplos deben llevar `Accept: application/json` y las escrituras JSON deben llevar `Content-Type: application/json`.
+Preparar un cliente Postman, Bruno u otra herramienta HTTP y configurar la URL local. Usar un token Sanctum de una cuenta activa y con el permiso necesario, guardado como secreto del cliente. Su creación y revocación son responsabilidad del operador; no incluir el token en la colección exportada ni en la grabación. Todos los ejemplos deben llevar `Accept: application/json` y las escrituras JSON deben llevar `Content-Type: application/json`.
 
 1. Ejecutar `POST /api/cameras` con datos ficticios equivalentes al formulario. Mostrar código 201, mensaje y el identificador recibido.
 2. Ejecutar `GET /api/cameras/{id}` con el identificador devuelto. Mostrar 200 y que los datos persisten.

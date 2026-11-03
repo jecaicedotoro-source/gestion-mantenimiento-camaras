@@ -1,80 +1,70 @@
 <?php
 
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
+use App\Services\UserManagementService;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Laravel\Sanctum\Sanctum;
 
-beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::emailVerification());
+function provisionedAccount(string $roleCode = 'administrador'): User
+{
+    $role = Role::firstOrCreate(['code' => $roleCode], ['name' => ucfirst($roleCode)]);
+
+    return User::factory()->create(['role_id' => $role->id, 'email_verified_at' => null]);
+}
+
+test('no existen rutas de confirmación de correo ni registro público', function () {
+    expect(Features::enabled(Features::emailVerification()))->toBeFalse()
+        ->and(Route::has('verification.notice'))->toBeFalse()
+        ->and(Route::has('verification.verify'))->toBeFalse()
+        ->and(Route::has('verification.send'))->toBeFalse();
+    $this->get('/email/verify')->assertNotFound();
+    $this->post('/email/verification-notification')->assertNotFound();
+    $this->get('/register')->assertNotFound();
+    $this->post('/register', [])->assertNotFound();
 });
 
-test('email verification screen can be rendered', function () {
-    $user = User::factory()->unverified()->create();
-
-    $response = $this->actingAs($user)->get(route('verification.notice'));
-
-    $response->assertOk();
-});
-
-test('unverified users are redirected to the email verification prompt', function () {
-    $user = User::factory()->unverified()->create();
-
-    $response = $this->actingAs($user)->get(route('appearance.edit'));
-
-    $response->assertRedirect(route('verification.notice'));
-});
-
-test('email can be verified', function () {
-    $user = User::factory()->unverified()->create();
-
-    Event::fake();
-
-    $verificationUrl = URL::temporarySignedRoute(
-        'verification.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1($user->email)],
-    );
-
-    $response = $this->actingAs($user)->get($verificationUrl);
-
-    Event::assertDispatched(Verified::class);
-
-    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
-});
-
-test('email is not verified with invalid hash', function () {
-    $user = User::factory()->unverified()->create();
-
-    $verificationUrl = URL::temporarySignedRoute(
-        'verification.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1('wrong-email')],
-    );
-
-    $this->actingAs($user)->get($verificationUrl);
-
-    expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
-});
-
-test('already verified user visiting verification link is redirected without firing event again', function () {
-    $user = User::factory()->create([
-        'email_verified_at' => now(),
+test('una cuenta creada por el administrador accede sin confirmar su correo y sin notificación', function () {
+    Notification::fake();
+    $admin = provisionedAccount();
+    $role = Role::firstOrCreate(['code' => 'tecnico'], ['name' => 'Técnico']);
+    $account = app(UserManagementService::class)->create($admin, [
+        'name' => 'Cuenta Administrada', 'email' => 'administrada@example.test',
+        'role_id' => $role->id, 'password' => 'ClaveSegura!2026',
+        'password_confirmation' => 'ClaveSegura!2026',
     ]);
+    expect($account->email_verified_at)->toBeNull();
+    Notification::assertNothingSent();
+    $this->post('/login', ['email' => $account->email, 'password' => 'ClaveSegura!2026'])
+        ->assertRedirect(route('dashboard', absolute: false));
+    $this->assertAuthenticatedAs($account);
+    $this->get('/dashboard')->assertOk();
+    $this->get('/cameras')->assertOk();
+});
 
-    Event::fake();
+test('los cuatro roles consultan la API sin confirmar correo pero solo el administrador gestiona usuarios', function () {
+    foreach (['administrador', 'coordinador', 'tecnico', 'auxiliar'] as $code) {
+        $account = provisionedAccount($code);
+        Sanctum::actingAs($account);
+        $this->getJson('/api/cameras')->assertOk();
+        $this->actingAs($account)->get('/admin/users')->assertStatus($code === 'administrador' ? 200 : 403);
+    }
+});
 
-    $verificationUrl = URL::temporarySignedRoute(
-        'verification.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1($user->email)],
-    );
+test('una cuenta inactiva sin correo confirmado sigue bloqueada por contraseña y API', function () {
+    $account = provisionedAccount();
+    $account->forceFill(['is_active' => false])->save();
+    $this->post('/login', ['email' => $account->email, 'password' => 'password'])->assertSessionHasErrors('email');
+    $this->assertGuest();
+    Sanctum::actingAs($account);
+    $this->getJson('/api/cameras')->assertForbidden();
+});
 
-    $this->actingAs($user)->get($verificationUrl)
-        ->assertRedirect(route('dashboard', absolute: false).'?verified=1');
-
-    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    Event::assertNotDispatched(Verified::class);
+test('el perfil no ofrece enlaces ni acciones para confirmar el correo', function () {
+    $account = provisionedAccount();
+    $this->actingAs($account)->get('/settings/profile')->assertOk()
+        ->assertDontSee('resendVerificationNotification', false)
+        ->assertDontSee('verification-link-sent', false);
 });

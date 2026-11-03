@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     Route::livewire('cameras', 'pages::cameras.index')
         ->middleware('can:view-cameras')

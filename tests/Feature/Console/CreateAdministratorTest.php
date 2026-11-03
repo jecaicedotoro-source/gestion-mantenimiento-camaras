@@ -18,7 +18,7 @@ test('alta administrativa interactiva crea una cuenta verificada sin contraseña
     $user = User::where('email', 'operador@example.com')->sole();
     expect($user->name)->toBe('Administrador de prueba')
         ->and($user->role?->code)->toBe('administrador')
-        ->and($user->email_verified_at)->not->toBeNull()
+        ->and($user->email_verified_at)->toBeNull()
         ->and($user->is_active)->toBeTrue()
         ->and(Hash::check($password, $user->password))->toBeTrue()
         ->and(Role::count())->toBe(4);

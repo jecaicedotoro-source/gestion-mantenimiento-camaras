@@ -16,7 +16,7 @@ final class CreateAdministrator extends Command
 {
     protected $signature = 'app:create-admin';
 
-    protected $description = 'Crea una cuenta administrativa verificada mediante preguntas interactivas.';
+    protected $description = 'Crea una cuenta administrativa mediante preguntas interactivas.';
 
     public function handle(): int
     {
@@ -48,8 +48,7 @@ final class CreateAdministrator extends Command
             $user->email = $data['email'];
             $user->password = $data['password'];
             $user->role_id = Role::query()->where('code', 'administrador')->sole()->id;
-            // La consola es el canal de confianza del operador para el alta inicial.
-            $user->email_verified_at = now();
+            // El operador autoriza el alta; no se declara una verificación de propiedad del correo.
             $user->is_active = true;
             $user->saveOrFail();
         });

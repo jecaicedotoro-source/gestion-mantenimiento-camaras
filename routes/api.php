@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\IncidentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'active', 'verified', 'throttle:60,1'])->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'throttle:60,1'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

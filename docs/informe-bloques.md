@@ -30,7 +30,7 @@ La navegación se condiciona a los permisos reales. El panel consulta únicament
 
 El formulario, API y servicio comparten reglas para datos obligatorios, IP opcional válida, inventario repetible y serie opcional única. Los valores vacíos opcionales se normalizan y la restricción de persistencia protege también frente a conflictos simultáneos. Se conservó el servicio existente y se completó la consulta del registro para demostrar su persistencia.
 
-La API mantiene `/api/cameras` y ofrece registro, consulta individual y listado con búsqueda y paginación. Autenticación Sanctum, cuenta activa, verificación de correo y gates protegen el acceso. Los códigos HTTP reales y la colección deben corresponder a las pruebas y documentación de la versión final.
+La API mantiene `/api/cameras` y ofrece registro, consulta individual y listado con búsqueda y paginación. Autenticación Sanctum, cuenta activa y gates protegen el acceso. Los códigos HTTP reales y la colección deben corresponder a las pruebas y documentación de la versión final.
 
 **Verificación:** pruebas de registro, consulta, validación, unicidad, campos vacíos, permisos y API, además de migraciones aisladas. **Pendiente de entrega:** mostrar solicitudes y respuestas reales de la herramienta HTTP elegida y la demostración visual del flujo completo. Consultar el [Guion](demostracion.md).
 

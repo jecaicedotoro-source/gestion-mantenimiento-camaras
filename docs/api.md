@@ -1,6 +1,6 @@
 # API HTTP del MVP
 
-Base de desarrollo: `http://localhost:8000/api`. Todas las rutas exigen token **Sanctum**, cuenta activa, correo verificado y permisos institucionales. Formato: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer {{token}}`. El límite general es 60 peticiones/minuto; IA añade cuotas inferiores.
+Base de desarrollo: `http://localhost:8000/api`. Todas las rutas exigen token **Sanctum**, cuenta activa y permisos institucionales; el alta administrativa no requiere confirmación de correo. Formato: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer {{token}}`. El límite general es 60 peticiones/minuto; IA añade cuotas inferiores.
 
 La colección [Postman](api.postman_collection.json) usa únicamente variables vacías y datos sintéticos. Importar, configurar `base_url`, guardar `token` como secreto local y no exportarlo. El token tiene los permisos actuales del usuario: nunca eleva un técnico a administrador.
 
@@ -85,7 +85,7 @@ Sugerencia 201: `{"message":"Sugerencia pendiente de confirmación humana.","dat
 | HTTP | Situación |
 | --- | --- |
 | 401 | Token ausente, inválido o revocado |
-| 403 | Cuenta inactiva, correo sin verificar o permiso insuficiente |
+| 403 | Cuenta inactiva o permiso insuficiente |
 | 404 | Cámara o incidencia inexistente |
 | 422 | Validación, serie duplicada, consentimiento/hash inválido, propuesta ajena/antigua, decisión ya confirmada o cuota local de IA |
 | 429 | Límite general de solicitudes HTTP |

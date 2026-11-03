@@ -4,12 +4,11 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\UserManagementService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passkeys\Passkeys;
 use Livewire\Livewire;
@@ -35,8 +34,8 @@ function managedUserData(array $attributes = []): array
     ];
 }
 
-test('servicio crea cuenta normalizada con contraseña cifrada y verificación pendiente', function () {
-    Event::fake([Registered::class]);
+test('servicio crea una cuenta activa sin enviar confirmación de correo', function () {
+    Notification::fake();
     $admin = managedUser();
     $user = app(UserManagementService::class)->create($admin, managedUserData(['is_active' => false]));
 
@@ -45,7 +44,7 @@ test('servicio crea cuenta normalizada con contraseña cifrada y verificación p
         ->and($user->is_active)->toBeTrue()
         ->and($user->email_verified_at)->toBeNull()
         ->and(Hash::check('ClaveSegura!2026', $user->password))->toBeTrue();
-    Event::assertDispatched(Registered::class);
+    Notification::assertNothingSent();
 });
 
 test('servicio rechaza correos repetidos y contraseñas débiles', function () {
@@ -60,11 +59,11 @@ test('servicio rechaza correos repetidos y contraseñas débiles', function () {
     }
 });
 
-test('técnico y administrador no verificado no pueden administrar usuarios', function () {
+test('técnico y administrador desactivado no pueden administrar usuarios', function () {
     $technician = managedUser('tecnico');
-    $unverified = managedUser('administrador', ['email_verified_at' => null]);
+    $inactive = managedUser('administrador', ['is_active' => false, 'email_verified_at' => null]);
 
-    foreach ([$technician, $unverified] as $actor) {
+    foreach ([$technician, $inactive] as $actor) {
         expect(fn () => app(UserManagementService::class)->create($actor, managedUserData()))
             ->toThrow(AuthorizationException::class);
     }
@@ -79,7 +78,7 @@ test('cuenta desactivada no puede reutilizar un actor cacheado para modificar us
         ->toThrow(AuthorizationException::class);
 });
 
-test('actualización conserva contraseña vacía y exige verificar un correo nuevo', function () {
+test('actualización conserva contraseña vacía y acepta el correo nuevo sin confirmación', function () {
     $admin = managedUser();
     $target = managedUser('tecnico');
     $password = $target->password;
@@ -240,10 +239,10 @@ test('API rechaza usuario inactivo incluso si conserva un token por un cambio ex
     $this->withToken($token)->getJson('/api/cameras')->assertForbidden();
 });
 
-test('API exige verificar el correo electrónico', function () {
+test('API permite acceso al administrador activo sin confirmación de correo', function () {
     $target = managedUser('administrador', ['email_verified_at' => null]);
     $token = $target->createToken('integracion')->plainTextToken;
-    $this->withToken($token)->getJson('/api/cameras')->assertForbidden();
+    $this->withToken($token)->getJson('/api/cameras')->assertOk();
 });
 
 test('acciones Livewire crean editan desactivan y reactivan sin eliminación física', function () {

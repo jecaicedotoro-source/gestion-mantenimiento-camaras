@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -62,16 +61,13 @@ final class UserManagementService
             return $user;
         });
 
-        // No enviar notificaciones antes de confirmar la transacción.
-        event(new Registered($user));
-
         return $user;
     }
 
     /** @param array<string, mixed> $data */
     public function update(User $actor, User $target, array $data): User
     {
-        [$user, $emailChanged] = DB::transaction(function () use ($actor, $target, $data): array {
+        $user = DB::transaction(function () use ($actor, $target, $data): User {
             $this->lockAdministration();
             $actor = User::findOrFail($actor->id);
             $user = User::with('role')->findOrFail($target->id);
@@ -108,12 +104,8 @@ final class UserManagementService
 
             $user->saveOrFail();
 
-            return [$user, $emailChanged];
+            return $user;
         });
-
-        if ($emailChanged) {
-            $user->sendEmailVerificationNotification();
-        }
 
         return $user;
     }

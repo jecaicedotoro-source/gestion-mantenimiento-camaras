@@ -23,10 +23,9 @@ test('API devuelve autenticación y recurso inexistente en español sin detalles
         ->assertExactJson(['message' => 'El recurso solicitado no existe.']);
 });
 
-test('API traduce rechazo por correo sin verificar y por permisos insuficientes', function () {
+test('API admite correo sin confirmar y traduce rechazo por permisos insuficientes', function () {
     Sanctum::actingAs(errorResponseAdmin(false));
-    $this->getJson('/api/cameras')->assertForbidden()
-        ->assertExactJson(['message' => 'No tienes permiso para realizar esta operación.']);
+    $this->getJson('/api/cameras')->assertOk();
 
     Sanctum::actingAs(User::factory()->create());
     $this->postJson('/api/cameras', [])->assertForbidden()

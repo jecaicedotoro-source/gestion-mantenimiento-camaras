@@ -10,7 +10,7 @@ final class IncidentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->is_active && $user->hasVerifiedEmail()
+        return $user->is_active
             && in_array($user->role?->code, ['administrador', 'coordinador', 'tecnico', 'auxiliar'], true);
     }
 

@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
          * Exclusivo del administrador.
          */
         Gate::define('manage-users', function (User $user): bool {
-            return $user->is_active && $user->hasVerifiedEmail() && $user->role?->code === 'administrador';
+            return $user->is_active && $user->role?->code === 'administrador';
         });
 
         /*
@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
          * Disponible para los cuatro roles institucionales.
          */
         Gate::define('view-cameras', function (User $user): bool {
-            return $user->is_active && $user->hasVerifiedEmail() && in_array($user->role?->code, [
+            return $user->is_active && in_array($user->role?->code, [
                 'administrador',
                 'coordinador',
                 'tecnico',
@@ -56,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
          * Disponible para administradores y coordinadores.
          */
         Gate::define('create-cameras', function (User $user): bool {
-            return $user->is_active && $user->hasVerifiedEmail() && in_array($user->role?->code, [
+            return $user->is_active && in_array($user->role?->code, [
                 'administrador',
                 'coordinador',
             ], true);

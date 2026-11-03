@@ -52,11 +52,11 @@ npm run build
 php artisan serve
 ```
 
-En Linux/macOS sustituir `Copy-Item` por `cp` y crear la base mediante `touch database/database.sqlite`. La cuenta inicial se crea de forma interactiva con contraseña oculta fuerte, correo único y verificación por el operador de consola. Los seeders solo crean/actualizan roles; nunca una contraseña predeterminada. El registro público está deshabilitado.
+En Linux/macOS sustituir `Copy-Item` por `cp` y crear la base mediante `touch database/database.sqlite`. El operador autoriza la cuenta inicial desde la consola con contraseña oculta fuerte y correo único. Los seeders solo crean/actualizan roles; nunca una contraseña predeterminada. El registro público está deshabilitado.
 
-Abrir `http://localhost:8000`. Configurar `APP_URL` con el origen real para passkeys y enlaces de verificación; fuera de localhost, WebAuthn requiere un contexto seguro apropiado. En Herd conservar el proyecto original y su configuración existente; aplicar los cambios revisados después de respaldar.
+Abrir `http://localhost:8000`. Configurar `APP_URL` con el origen real para passkeys y enlaces de recuperación; fuera de localhost, WebAuthn requiere un contexto seguro apropiado. En Herd conservar el proyecto original y su configuración existente; aplicar los cambios revisados después de respaldar.
 
-Variables principales: `APP_NAME`, `APP_URL`, `APP_KEY`, `APP_LOCALE=es`, `DB_CONNECTION=sqlite`, `DB_DATABASE` opcional (por defecto `database/database.sqlite`), `SESSION_DRIVER=database`, `CACHE_STORE=database`. Configurar un transporte de correo operativo para verificaciones de cuentas creadas desde la administración; `MAIL_MAILER=log` es solo para desarrollo y sus registros deben mantenerse privados.
+Variables principales: `APP_NAME`, `APP_URL`, `APP_KEY`, `APP_LOCALE=es`, `DB_CONNECTION=sqlite`, `DB_DATABASE` opcional (por defecto `database/database.sqlite`), `SESSION_DRIVER=database`, `CACHE_STORE=database`. El alta y el inicio de sesión no necesitan SMTP; si se utiliza la recuperación por correo, configurar un transporte operativo. `MAIL_MAILER=log` es solo para desarrollo y sus registros deben mantenerse privados.
 
 `.env`, respaldos y bases SQLite son locales. No publicar secretos ni ejecutar `migrate:fresh` sobre una base con información real. Antes de modificar estructuras existentes:
 
@@ -75,7 +75,11 @@ Directorios principales: `app/Services` (casos de uso), `app/Policies` (autoriza
 
 ## Autenticación, roles y funcionalidades
 
-Roles existentes: administrador, coordinador, técnico y auxiliar. Fortify administra autenticación y verificación; Sanctum protege la API. Las reglas existentes permiten registrar cámaras a administrador y coordinador; CU-01 tiene al administrador como actor principal.
+Roles existentes: administrador, coordinador, técnico y auxiliar. Fortify administra la autenticación y Sanctum protege la API. Las reglas existentes permiten registrar cámaras a administrador y coordinador; CU-01 tiene al administrador como actor principal.
+
+El alta institucional la autoriza el administrador: una cuenta activa puede acceder con sus credenciales y los permisos de su rol sin confirmar un enlace por correo. El correo sigue siendo obligatorio, válido y único; el administrador debe comprobarlo antes de crear la cuenta, pues también se usa en la recuperación de contraseña. Se conserva `email_verified_at` como campo histórico sin usarlo para conceder acceso ni declarar una verificación nueva. El registro público, los permisos y el bloqueo de cuentas inactivas conservan su comportamiento.
+
+Verificación local del cambio: **122 pruebas aprobadas, 2 omitidas y 454 aserciones**, incluidos acceso con una cuenta creada por el administrador, ausencia de notificaciones de confirmación, rutas de verificación y registro público inaccesibles, permisos por rol y rechazo de cuentas inactivas. No requiere migraciones.
 
 ### Bloque de usuarios consolidado
 
@@ -87,13 +91,13 @@ Se añadieron 22 pruebas de usuarios y se adaptaron las de perfil. La ejecución
 
 ## API HTTP
 
-CU-01 está implementado mediante formulario Livewire, `CameraRegistrationService` y API Sanctum: `GET /api/cameras`, `POST /api/cameras` y `GET /api/cameras/{id}`. La consulta admite búsqueda y paginación. Todas las rutas exigen cuenta activa y correo verificado; solo administrador/coordinador registran cámaras.
+CU-01 está implementado mediante formulario Livewire, `CameraRegistrationService` y API Sanctum: `GET /api/cameras`, `POST /api/cameras` y `GET /api/cameras/{id}`. La consulta admite búsqueda y paginación. Todas las rutas exigen autenticación y cuenta activa; solo administrador/coordinador registran cámaras.
 
 Se valida IP opcional, campos obligatorios y longitudes. El inventario puede repetirse y la serie opcional es única; blancos opcionales se convierten en `null`. La restricción de SQLite resuelve también conflictos simultáneos. No se introduce activo fijo como requisito adicional.
 
 Consultar [rutas, validaciones, ejemplos y códigos HTTP](docs/api.md), [colección Postman sin credenciales](docs/api.postman_collection.json) y la colección Bruno heredada en `USC - Inventario de Cámaras/`. Postman está preparado y sus scripts fueron validados; no se declara una ejecución real desde esa aplicación. Las peticiones OpenAI y las confirmaciones se omiten por defecto y requieren activación/revisión explícita.
 
-Las pruebas verifican registro desde Livewire, persistencia, consulta individual, búsquedas, duplicados, valores ausentes, correo verificado, roles y errores. Los ejemplos de documentación son datos ficticios, no inventario institucional.
+Las pruebas verifican registro desde Livewire, persistencia, consulta individual, búsquedas, duplicados, valores ausentes, acceso sin confirmación de correo, roles y errores. Los ejemplos de documentación son datos ficticios, no inventario institucional.
 
 ## Inteligencia artificial
 
@@ -142,7 +146,7 @@ Las excepciones públicas de la API se normalizan al español y ocultan trazas i
 
 **CI final del incremento aprobada:** [ejecución 41635991294](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41635991294), sobre el código `12212273`: **122 aprobadas, 2 omitidas y 435 aserciones**, PHPStan sin errores, Pint y build correctos. Docker verificó arranque, API y persistencia idéntica tras reiniciar. Se conservan [respuestas HTTP sintéticas sin credenciales](docs/evidencias/http-cu01.json).
 
-Última ejecución local del 3 de noviembre de 2026: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
+Ejecución local del incremento inicial, anterior al ajuste de confirmación de correo: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
 
 El [PR #1](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1) está abierto en borrador. La primera CI Linux confirmó los mismos 116 casos aprobados con configuración estándar y detectó seis avisos de tipos que se corrigieron sin desactivar reglas. Se añadieron exclusiones de credenciales Composer y cachés locales al contexto Docker; el estado final se mantiene en las evidencias.
 

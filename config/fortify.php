@@ -163,7 +163,7 @@ return [
     'features' => [
         // Features::registration(),
         Features::resetPasswords(),
-        Features::emailVerification(),
+        // Las cuentas se autorizan mediante el alta del administrador, sin confirmación por correo.
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
