@@ -136,6 +136,8 @@ La suite incluye casos positivos, negativos, autorización, preservación de ide
 
 Última ejecución local del 3 de noviembre de 2026: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
 
+El [PR #1](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1) está abierto en borrador. La primera CI Linux confirmó los mismos 116 casos aprobados con configuración estándar y detectó seis avisos de tipos que se corrigieron sin desactivar reglas. Se añadieron exclusiones de credenciales Composer y cachés locales al contexto Docker; el estado final se mantiene en las evidencias.
+
 ## Docker y ejecución reproducible
 
 La imagen usa PHP 8.5 y una etapa Node 22 para recursos; ejecución con usuario sin privilegios, configuración sin depuración y puerto ligado a localhost. Compose conserva SQLite y respaldos en el volumen `app-storage`; las migraciones se preceden de un respaldo consistente.

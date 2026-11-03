@@ -41,7 +41,23 @@ El adaptador OpenAI es HTTP real, con endpoint fijo, configuración segura, sali
 
 ## GitHub y CI
 
-Publicación de la rama, commits remotos, PR y resultados de CI: **pendientes de registro**. La revisión humana y la fusión se mantienen pendientes hasta efectuarse; los subagentes no se consideran revisores académicos ni un segundo integrante.
+Rama publicada: `codex/consolidacion-mvp-usc`. [PR #1 en borrador](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1), abierto y sin fusionar. El contenido de la rama inicial publicada se comprobó contra la copia local mediante el mismo árbol Git `431bdec1ea3a144b378b2f7572d8b30594d30d96`. Los SHA de commits locales y remotos difieren porque la publicación se realizó mediante el conector GitHub; el contenido es equivalente y no se alteró el historial previo.
+
+| Bloque publicado | Commit remoto |
+| --- | --- |
+| chore: conservar avances locales CU-01 y documentar auditoría inicial | [9a9c551](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/9a9c5512f59e1d06403c199b1292cf48a4b23093) |
+| feat: consolidar usuarios con policies desactivación y revocación de acceso | [314440b](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/314440be384e52cb2c316266466bd91f6b18b658) |
+| style: renovar panel y navegación institucional con etiquetas en español | [46b6e46](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/46b6e46cfba12d3f840c481639344293c28b20e3) |
+| feat: completar CU-01 con validación persistencia y API documentada | [f898c31](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/f898c31181b5e6996b92a89a0f0aeb8011bf1a36) |
+| feat: integrar incidencias y OpenAI con revisión humana y resiliencia | [413558b](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/413558b1725dfef07dc2ca8f9c0334ca76391cf8) |
+| build: integrar seguridad y APIs con Docker CI y comandos operativos | [69b1b0e](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/69b1b0e3d87130e04d1e80656a12afe6aa265ff0) |
+| docs: contrastar diez entregables y registrar evidencia reproducible | [7d4bf09](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/7d4bf09573a27c81cfc7e255a08e55d502e6b02d) |
+
+Primera CI remota iniciada: [Actions 41633905889](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41633905889), con trabajos `ci` y `docker`. Su resultado se registra tras comprobarlo; no se deduce de la existencia del workflow. La revisión humana y la fusión se mantienen pendientes hasta efectuarse; los subagentes no se consideran revisores académicos ni un segundo integrante.
+
+La primera ejecución Linux confirmó **116 aprobadas, 2 omitidas y 398 aserciones**, con el archivo estándar `phpunit.xml`. El trabajo CI falló únicamente en PHPStan: seis avisos de tipos (fechas Carbon, relación genérica, arrays de reglas/entrada, acceso nullsafe redundante y conversión de configuración Sanctum). Se corrigieron sin baselines ni exclusiones de análisis; falta confirmar la nueva ejecución. JUnit de esa ejecución: [artefacto de pruebas](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41633905889/artifacts/13228549524), retención siete días.
+
+Se reforzó `.dockerignore` para excluir también `auth.json`, cachés PHP locales que podrían incorporar configuración sensible y `public/storage`. La imagen regenera sus cachés desde las dependencias propias; no reutiliza la configuración del equipo del operador.
 
 ## Límites de la evidencia
 

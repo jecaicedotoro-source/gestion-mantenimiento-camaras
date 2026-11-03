@@ -15,6 +15,8 @@ class Role extends Model
 
     /**
      * Usuarios asociados a este rol.
+     *
+     * @return HasMany<User, $this>
      */
     public function users(): HasMany
     {

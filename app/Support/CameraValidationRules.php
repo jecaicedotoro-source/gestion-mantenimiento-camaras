@@ -3,9 +3,12 @@
 namespace App\Support;
 
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
+use Illuminate\Validation\Rules\Unique;
 
 final class CameraValidationRules
 {
+    /** @return array<string, list<string|In|Unique>> */
     public static function rules(): array
     {
         return [

@@ -2,6 +2,11 @@
 .env
 .env.*
 !.env.example
+# Credenciales de Composer y cachés locales pueden contener secretos aunque .env esté excluido.
+auth.json
+**/auth.json
+bootstrap/cache/*.php
+public/storage
 vendor
 node_modules
 public/hot

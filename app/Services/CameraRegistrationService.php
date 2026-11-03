@@ -13,6 +13,8 @@ final class CameraRegistrationService
 {
     /**
      * Valida y registra una cámara en el inventario.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function register(array $data): Camera
     {

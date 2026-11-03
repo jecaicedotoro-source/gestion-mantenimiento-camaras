@@ -92,7 +92,7 @@ class Index extends Component
         $this->resetValidation();
         $this->selectedIncidentId = $incident->id;
         $this->suggestionId = $suggestion?->id;
-        $this->category = $suggestion?->suggested_category ?? '';
+        $this->category = $suggestion->suggested_category ?? '';
         $this->previewText = '';
         $this->previewHash = '';
         $this->shareApproved = false;
