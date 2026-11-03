@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     /**
      * Rol institucional asignado al usuario.
+     *
      * @return BelongsTo<Role, $this>
      */
     public function role(): BelongsTo

@@ -31,7 +31,43 @@ Se conserva Livewire/Flux y se aplica una renovación moderada: navegación azul
 
 ## Instalación y configuración
 
-Las instrucciones reproducibles se completarán junto con su verificación. `.env` y las bases SQLite son archivos locales y no deben publicarse. No utilizar `migrate:fresh` sobre una base con información real.
+Requisitos: PHP 8.5, Composer 2, Node 22 o superior compatible con el lockfile, y extensiones PHP habituales de Laravel más SQLite, mbstring, intl y zip. Se mantienen las dependencias bloqueadas de Composer/npm. PHP y SQLite simplifican el MVP; Livewire evita una segunda aplicación frontend y Fortify/Sanctum reutilizan autenticación probada.
+
+En una copia nueva, desde PowerShell:
+
+```powershell
+composer install
+Copy-Item .env.example .env
+php artisan key:generate
+if (-not (Test-Path database/database.sqlite)) { New-Item -ItemType File database/database.sqlite }
+php artisan migrate --force
+php artisan db:seed --force
+php artisan app:create-admin
+npm ci
+npm run build
+php artisan serve
+```
+
+En Linux/macOS sustituir `Copy-Item` por `cp` y crear la base mediante `touch database/database.sqlite`. La cuenta inicial se crea de forma interactiva con contraseña oculta fuerte, correo único y verificación por el operador de consola. Los seeders solo crean/actualizan roles; nunca una contraseña predeterminada. El registro público está deshabilitado.
+
+Abrir `http://localhost:8000`. Configurar `APP_URL` con el origen real para passkeys y enlaces de verificación; fuera de localhost, WebAuthn requiere un contexto seguro apropiado. En Herd conservar el proyecto original y su configuración existente; aplicar los cambios revisados después de respaldar.
+
+Variables principales: `APP_NAME`, `APP_URL`, `APP_KEY`, `APP_LOCALE=es`, `DB_CONNECTION=sqlite`, `DB_DATABASE` opcional (por defecto `database/database.sqlite`), `SESSION_DRIVER=database`, `CACHE_STORE=database`. Configurar un transporte de correo operativo para verificaciones de cuentas creadas desde la administración; `MAIL_MAILER=log` es solo para desarrollo y sus registros deben mantenerse privados.
+
+`.env`, respaldos y bases SQLite son locales. No publicar secretos ni ejecutar `migrate:fresh` sobre una base con información real. Antes de modificar estructuras existentes:
+
+```powershell
+php artisan app:backup-database
+php artisan migrate --force
+```
+
+El respaldo utiliza `VACUUM INTO` para obtener una copia consistente en `storage/app/backups`. Proteger y conservar esa carpeta; la retención automática no se ha definido institucionalmente. Una restauración debe realizarse sobre una copia revisada, con la aplicación detenida y autorización del responsable.
+
+## Base de datos y estructura del incremento
+
+`roles` y `users` conservan la autenticación original; `users.is_active/auth_version` controlan vigencia del acceso. `cameras` almacena el inventario. `incidents` referencia cámara, reportante y responsable de revisión; `incident_classifications` registra solicitudes y decisiones humanas con vínculo a la propuesta. Las claves foráneas impiden borrar registros con historial. Se agregan migraciones sin eliminar usuarios/cámaras.
+
+Directorios principales: `app/Services` (casos de uso), `app/Policies` (autorización), `app/Contracts` y `app/Infrastructure/AI` (puerto/adaptador), `app/Livewire` y `resources/views` (presentación), `app/Http/Controllers/Api` (HTTP), `database/migrations`, `tests`, `docker` y `docs`. Ubicaciones normalizadas, programación y mantenimiento completo se mantienen como alcance futuro, no como tablas implementadas.
 
 ## Autenticación, roles y funcionalidades
 
@@ -86,17 +122,55 @@ Referencias de implementación: [Responses API](https://developers.openai.com/ap
 
 ## Pruebas y ejecución reproducible
 
-Se registrarán comandos y resultados después de ejecutar cada bloque en la copia de trabajo. La existencia de archivos de prueba no acredita por sí sola que hayan pasado. Docker todavía no está implementado en esta línea base.
+Pruebas con Pest 5 sobre PHPUnit 13 y SQLite en memoria, sin llamadas externas de IA. Ejecutar:
+
+```powershell
+php artisan test
+vendor/bin/pint --test
+vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+npm run build
+php artisan view:cache
+```
+
+La suite incluye casos positivos, negativos, autorización, preservación de identidad, CU-01 desde Livewire/API, integración simulada OpenAI, confirmación humana y comandos operativos. La CI ejecuta la configuración estándar y conserva JUnit. Los resultados y las limitaciones del entorno local se registran en [evidencias verificadas](docs/evidencias.md); no se afirma cobertura porcentual sin medirla.
+
+Última ejecución local del 3 de noviembre de 2026: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
+
+## Docker y ejecución reproducible
+
+La imagen usa PHP 8.5 y una etapa Node 22 para recursos; ejecución con usuario sin privilegios, configuración sin depuración y puerto ligado a localhost. Compose conserva SQLite y respaldos en el volumen `app-storage`; las migraciones se preceden de un respaldo consistente.
+
+Preparar `.env` y una `APP_KEY` válida mediante los pasos anteriores; mantener OpenAI deshabilitado hasta configurarlo de forma controlada. Ejecutar:
+
+```powershell
+docker compose build
+docker compose up -d --wait
+docker compose exec app php artisan app:create-admin
+docker compose ps
+docker compose down
+```
+
+Abrir `http://localhost:8000`. `down` conserva el volumen; **no añadir `--volumes` sobre datos que deban conservarse**. El comando con eliminación de volumen del workflow se limita a recursos efímeros de CI. El servidor incluido sirve a la demostración académica; un despliegue institucional requiere revisar servidor HTTP, TLS, copias, correo y operación.
+
+Docker no está instalado localmente en este entorno. La CI prepara construcción, arranque, salud HTTP y reinicio; su estado real se registra en las evidencias y el PR, sin asumir que los archivos equivalen a una ejecución aprobada.
 
 ## Control de versiones y evidencias académicas
 
 Cada bloque incorpora código, pruebas y una actualización de este documento. Los commits conservan la procedencia de los cambios locales y las mejoras de esta continuación. Los PR deben revisarse antes de integrarse.
 
-La matriz de diez entregables y el guion de demostración se agregarán en `docs/`. El taller original y los artefactos aprobados de Módulos 1 y 2 deben contrastarse cuando estén disponibles; el prompt maestro aportado por el usuario es la guía de alcance actual.
+La rama `codex/consolidacion-mvp-usc` organiza la continuación por bloques; los enlaces verificables de commits/PR y el estado de CI están en [evidencias](docs/evidencias.md). La revisión e integración de un PR se registran solo cuando ocurren.
+
+Se leyeron íntegramente el taller original del Módulo 3 y los textos de Módulos 1/2. Consultar [matriz de diez entregables](docs/matriz-entregables.md), [trazabilidad y diferencias con el diseño](docs/trazabilidad-diseno.md), [informe por bloques](docs/informe-bloques.md) y [guion de demostración](docs/demostracion.md). El PDF académico reúne evidencia y brechas; la entrega al aula, sustentación y video/demostración final corresponden al responsable académico.
+
+## Funcionalidades pendientes y límites
+
+Pendientes: llamada real controlada a OpenAI; revisión institucional del catálogo y permisos; comprobación visual completa y WebAuthn con hardware; revisión/fusión humana del PR y demostración final; validación Docker según su ejecución de CI. No se implementan vídeo, reconocimiento facial, conexiones a cámaras/NVR/DVR ni diagnósticos automáticos. El modelo conceptual más amplio y sus partes diferidas se explican en la trazabilidad.
 
 ## Autores, contribuciones y uso responsable de IA
 
 Se conserva el historial del repositorio. No se atribuyen aportaciones a integrantes sin evidencia. Esta continuación utiliza un asistente de IA para apoyar implementación y revisión; los resultados de pruebas y las limitaciones se documentan explícitamente.
+
+El Módulo 1 identifica a **John Edward Caicedo Toro**. Un borrador del Módulo 3 declara autorización docente para trabajo individual; esa autorización original todavía debe acreditarse. Los asistentes de IA no se presentan como integrantes académicos. El autor debe comprender, revisar y sustentar los cambios.
 
 ## Licencia y consideraciones institucionales
 

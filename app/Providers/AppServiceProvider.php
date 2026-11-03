@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\IClasificadorIncidencias;
+use App\Infrastructure\AI\OpenAIIncidentClassifier;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -17,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // El dominio conoce el contrato; el adaptador HTTP pertenece a infraestructura.
+        $this->app->bind(IClasificadorIncidencias::class, OpenAIIncidentClassifier::class);
     }
 
     /**
@@ -32,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
          * Exclusivo del administrador.
          */
         Gate::define('manage-users', function (User $user): bool {
-            return $user->role?->code === 'administrador';
+            return $user->is_active && $user->hasVerifiedEmail() && $user->role?->code === 'administrador';
         });
 
         /*
@@ -40,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
          * Disponible para los cuatro roles institucionales.
          */
         Gate::define('view-cameras', function (User $user): bool {
-            return in_array($user->role?->code, [
+            return $user->is_active && $user->hasVerifiedEmail() && in_array($user->role?->code, [
                 'administrador',
                 'coordinador',
                 'tecnico',
@@ -53,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
          * Disponible para administradores y coordinadores.
          */
         Gate::define('create-cameras', function (User $user): bool {
-            return in_array($user->role?->code, [
+            return $user->is_active && $user->hasVerifiedEmail() && in_array($user->role?->code, [
                 'administrador',
                 'coordinador',
             ], true);

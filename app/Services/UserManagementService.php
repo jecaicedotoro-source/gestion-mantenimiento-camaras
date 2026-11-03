@@ -15,12 +15,13 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Coordina validación, autorización y cambios transaccionales de cuentas.
+ *
  * @phpstan-type UserData array{name: string, email: string, role_id: int|string, password?: string|null}
  */
 final class UserManagementService
 {
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return UserData
      */
     public function validate(User $actor, array $data, ?User $target = null): array
@@ -50,7 +51,7 @@ final class UserManagementService
         $user = DB::transaction(function () use ($actor, $data): User {
             $this->lockAdministration();
             $validated = $this->validate(User::findOrFail($actor->id), $data);
-            $user = new User();
+            $user = new User;
             $user->name = $validated['name'];
             $user->email = $validated['email'];
             $user->role_id = (int) $validated['role_id'];

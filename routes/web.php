@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Dashboard;
+use App\Livewire\Incidents\Index;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -10,7 +12,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:view-cameras')
         ->name('cameras.index');
 
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', Dashboard::class)->name('dashboard');
+
+    Route::get('incidents', Index::class)->name('incidents.index');
 
     Route::livewire('admin/users', 'pages::admin.users.index')
         ->middleware('can:manage-users')
