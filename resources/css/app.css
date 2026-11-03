@@ -23,16 +23,22 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    /* Identidad del MVP: índigo para acciones, turquesa para estados positivos. */
+    --color-brand-indigo: #4f46e5;
+    --color-brand-teal: #0d9488;
+    --color-brand-navy: #172554;
+    --color-brand-coral: #f97373;
+    --color-brand-amber: #f59e0b;
+    --color-accent: var(--color-brand-indigo);
+    --color-accent-content: var(--color-brand-indigo);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: #a5b4fc;
+        --color-accent-content: #a5b4fc;
+        --color-accent-foreground: #172554;
     }
 }
 
@@ -44,6 +50,20 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+
+    /* El foco sigue siendo visible al navegar con teclado en ambos temas. */
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, ::before, ::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
     }
 }
 
@@ -61,6 +81,23 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+/* La navegación conserva un fondo marino incluso con la apariencia clara. */
+.institutional-sidebar [data-flux-sidebar-item] {
+    color: #dbeafe;
+    min-height: 2.5rem;
+}
+
+.institutional-sidebar [data-flux-sidebar-item][data-current] {
+    color: #ffffff;
+    background: #4f46e5;
+    border-color: #6366f1;
+}
+
+.institutional-sidebar [data-flux-sidebar-item]:hover {
+    color: #ffffff;
+    background: #273b76;
+}
+
+.institutional-sidebar [data-flux-sidebar-item][data-current]:hover {
+    background: #4338ca;
+}

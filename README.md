@@ -23,6 +23,12 @@ Auditoría del 3 de noviembre de 2026: PHP local 8.5.12; `composer.lock`: Larave
 
 Monolito modular con MVC y capas: presentación en Blade/Livewire, aplicación en `app/Services`, reglas compartidas en `app/Support`, autorización mediante Gates/policies e infraestructura Eloquent/SQLite. Se incorporan abstracciones únicamente donde separan una integración externa.
 
+### Interfaz
+
+Se conserva Livewire/Flux y se aplica una renovación moderada: navegación azul marino, índigo principal, turquesa para estados positivos y ámbar/coral como acentos. La portada es propia del proyecto, sin atribuir autorización de marca institucional. El dashboard consulta indicadores reales según los permisos del usuario. Formularios y tablas conservan modo oscuro, adaptación a pantallas pequeñas, etiquetas y mensajes en español, foco visible y estados de carga.
+
+`npm run build` y `php artisan view:cache` se ejecutaron correctamente. La inspección visual en navegador sigue pendiente por fallo del controlador de interfaz del entorno; no se declara una auditoría WCAG ni una verificación visual móvil completa.
+
 ## Instalación y configuración
 
 Las instrucciones reproducibles se completarán junto con su verificación. `.env` y las bases SQLite son archivos locales y no deben publicarse. No utilizar `migrate:fresh` sobre una base con información real.
