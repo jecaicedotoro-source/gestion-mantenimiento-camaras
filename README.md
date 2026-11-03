@@ -57,7 +57,32 @@ Las pruebas verifican registro desde Livewire, persistencia, consulta individual
 
 ## Inteligencia artificial
 
-Pendiente en esta línea base: contrato `IClasificadorIncidencias`, adaptador real OpenAI, sugerencias separadas de decisiones humanas, controles de privacidad y pruebas. No hay evidencia aún de una llamada real a OpenAI.
+Implementados `IClasificadorIncidencias`, `IncidentManagementService`, el adaptador HTTP real `OpenAIIncidentClassifier`, Livewire y la API `/api/v1/incidencias`. Las incidencias se guardan antes de clasificar. El catálogo inicial es provisional: conectividad, alimentación, imagen, hardware, configuración y otra; requiere validación institucional.
+
+El flujo muestra una vista previa minimizada y requiere autorización para enviar el texto. Se omiten datos conocidos de cámara y usuario, IP, correo, URL y patrones de credenciales/identificadores; la detección automática puede ser incompleta y debe revisarse. Solo se envía descripción textual, nunca vídeo, imágenes, tablas de usuarios ni datos completos de la cámara.
+
+El adaptador usa `POST https://api.openai.com/v1/responses`, `store:false`, JSON Schema estricto y validación local de categoría/justificación. No sigue redirecciones ni reintenta automáticamente. Se acotan timeout (máximo 30 s) y salida (máximo 1000 tokens). `store:false` no sustituye revisar las condiciones de tratamiento y retención del proveedor.
+
+La IA solo propone. Aceptar, corregir o clasificar manualmente persiste categoría final, responsable, fecha y relación con la propuesta. El historial no se borra. Se impiden propuestas de otra incidencia, decisiones duplicadas y respuestas tardías que sustituyan una propuesta vigente. Una solicitud interrumpida se recupera al vencer timeout más 60 s; una configuración ausente no agota el cupo permanente de la incidencia.
+
+Configuración exclusivamente en `.env` o el gestor de secretos del entorno:
+
+```dotenv
+OPENAI_ENABLED=false
+OPENAI_API_KEY=
+OPENAI_MODEL=
+OPENAI_TIMEOUT=15
+OPENAI_MAX_OUTPUT_TOKENS=300
+OPENAI_REQUESTS_PER_MINUTE=5
+OPENAI_REQUESTS_PER_DAY=50
+OPENAI_ATTEMPTS_PER_INCIDENT=3
+```
+
+Para habilitar: configurar una clave válida y un modelo compatible con Responses y salidas estructuradas, activar `OPENAI_ENABLED=true` y refrescar la configuración. Los límites se comprueban en servidor por usuario/incidencia; intentos fallidos también consumen cuota temporal para evitar abuso. El consumo de tokens devuelto por el proveedor se registra cuando existe; no se inventan confianza ni costos. La facturación depende del modelo y de la cuenta API configurada.
+
+**Verificado:** 32 pruebas del bloque, 144 aserciones, con clasificador falso y `Http::fake`: respuestas válidas/malformadas, categoría desconocida, errores HTTP/429, timeout, límites, permisos, consentimiento, confirmación/corrección, alternativa manual y recuperación. **Pendiente:** llamada real controlada con clave/modelo; no se han efectuado solicitudes reales ni cargos a OpenAI. La alternativa manual funciona con la integración deshabilitada.
+
+Referencias de implementación: [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create) y [salidas estructuradas](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses).
 
 ## Pruebas y ejecución reproducible
 
