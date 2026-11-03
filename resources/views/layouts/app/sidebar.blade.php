@@ -58,7 +58,8 @@
             </flux:menu>
         </flux:dropdown>
     </flux:header>
-    <div id="contenido-principal" class="contents">{{ $slot }}</div>
+    {{-- Flux necesita que el contenido principal comparta padre con la barra lateral. --}}
+    {{ $slot }}
     @persist('toast')
         <flux:toast.group><flux:toast /></flux:toast.group>
     @endpersist

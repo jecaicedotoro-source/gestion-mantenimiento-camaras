@@ -25,6 +25,10 @@ Monolito modular con MVC y capas: presentación en Blade/Livewire, aplicación e
 
 ### Interfaz
 
+Se corrigió la distribución compartida de las páginas internas: el contenido principal vuelve a ser hijo directo del mismo contenedor que la barra lateral, como exige Flux. Esto evita que el menú se superponga a los formularios y que el contenido empiece debajo de la altura de la navegación; el enlace de salto accesible apunta directamente al contenido principal.
+
+La corrección de distribución se comprobó mediante compilación de recursos y plantillas y siete pruebas existentes de acceso a cámaras y panel, todas aprobadas con nueve aserciones; queda la comprobación visual en el navegador del usuario.
+
 Se conserva Livewire/Flux y se aplica una renovación moderada: navegación azul marino, índigo principal, turquesa para estados positivos y ámbar/coral como acentos. La portada es propia del proyecto, sin atribuir autorización de marca institucional. El dashboard consulta indicadores reales según los permisos del usuario. Formularios y tablas conservan modo oscuro, adaptación a pantallas pequeñas, etiquetas y mensajes en español, foco visible y estados de carga.
 
 `npm run build` y `php artisan view:cache` se ejecutaron correctamente. La inspección visual en navegador sigue pendiente por fallo del controlador de interfaz del entorno; no se declara una auditoría WCAG ni una verificación visual móvil completa.
