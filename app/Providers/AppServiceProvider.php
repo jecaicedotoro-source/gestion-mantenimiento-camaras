@@ -27,8 +27,36 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        /*
+         * Permiso para administrar usuarios.
+         * Exclusivo del administrador.
+         */
         Gate::define('manage-users', function (User $user): bool {
             return $user->role?->code === 'administrador';
+        });
+
+        /*
+         * Permiso para consultar el inventario de cámaras.
+         * Disponible para los cuatro roles institucionales.
+         */
+        Gate::define('view-cameras', function (User $user): bool {
+            return in_array($user->role?->code, [
+                'administrador',
+                'coordinador',
+                'tecnico',
+                'auxiliar',
+            ], true);
+        });
+
+        /*
+         * Permiso para registrar cámaras de seguridad.
+         * Disponible para administradores y coordinadores.
+         */
+        Gate::define('create-cameras', function (User $user): bool {
+            return in_array($user->role?->code, [
+                'administrador',
+                'coordinador',
+            ], true);
         });
     }
 

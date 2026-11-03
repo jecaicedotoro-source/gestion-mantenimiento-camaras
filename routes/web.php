@@ -6,11 +6,19 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    Route::livewire('cameras', 'pages::cameras.index')
+        ->middleware('can:view-cameras')
+        ->name('cameras.index');
+
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
     Route::livewire('admin/users', 'pages::admin.users.index')
-            ->middleware('can:manage-users')
-            ->name('admin.users.index');
+        ->middleware('can:manage-users')
+        ->name('admin.users.index');
+
+    Route::livewire('cameras/create', 'pages::cameras.create')
+        ->middleware('can:create-cameras')
+        ->name('cameras.create');
 
 });
 
