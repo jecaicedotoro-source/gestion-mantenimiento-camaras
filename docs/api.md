@@ -22,6 +22,7 @@ El resultado es un secreto: introducirlo solo en el almacén local de Postman/Br
 | `GET /cameras?search=DEMO&page=1` | Cualquiera de los cuatro roles | 200, paginación de 10 registros y búsqueda por código/serie/ubicación |
 | `POST /cameras` | Administrador o coordinador | 201, cámara persistida |
 | `GET /cameras/{id}` | Cualquiera de los cuatro roles | 200 o 404 |
+| `DELETE /cameras/{id}` | Administrador activo | 200, baja lógica con historial conservado |
 
 El administrador es el actor principal del CU-01. Se conserva el permiso previo del coordinador. Técnico y auxiliar pueden consultar; no registrar cámaras.
 

@@ -1,12 +1,39 @@
 <?php
 
 use App\Models\Camera;
+use App\Models\Incident;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
+
+test('solo un administrador retira una cámara y conserva sus incidencias', function () {
+    $camera = Camera::create(apiCameraData());
+    $coordinator = apiUserWithRole('coordinador');
+    $incident = Incident::create([
+        'camera_id' => $camera->id,
+        'reported_by' => $coordinator->id,
+        'description' => 'Pérdida intermitente de imagen.',
+    ]);
+    $this->deleteJson('/api/cameras/'.$camera->id)->assertUnauthorized();
+    Sanctum::actingAs($coordinator);
+    $this->deleteJson('/api/cameras/'.$camera->id)->assertForbidden();
+
+    Sanctum::actingAs(apiUserWithRole('administrador'));
+    $this->deleteJson('/api/cameras/'.$camera->id)->assertOk();
+    $this->assertSoftDeleted($camera);
+    $this->getJson('/api/cameras')->assertJsonPath('total', 0);
+    $this->getJson('/api/cameras/'.$camera->id)->assertNotFound();
+    $this->deleteJson('/api/cameras/'.$camera->id)->assertNotFound();
+    expect($incident->fresh()->camera->id)->toBe($camera->id);
+    $this->getJson('/api/v1/incidencias/'.$incident->id)->assertOk();
+    $this->postJson('/api/v1/incidencias', [
+        'camera_id' => $camera->id,
+        'description' => 'Esta incidencia debe rechazarse.',
+    ])->assertUnprocessable()->assertJsonValidationErrors('camera_id');
+});
 
 function apiCameraData(): array
 {

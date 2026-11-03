@@ -91,6 +91,12 @@ Se añadieron 22 pruebas de usuarios y se adaptaron las de perfil. La ejecución
 
 ## API HTTP
 
+### Baja de cámaras y conservación del historial
+
+La baja está reservada a administradores activos. Retira la cámara de las consultas y los indicadores del inventario y conserva su registro, número de serie e incidencias. Las incidencias existentes siguen consultables y las cámaras retiradas dejan de admitir incidencias nuevas.
+
+`DELETE /api/cameras/{id}` requiere un token Sanctum de administrador y devuelve HTTP 200 al dar de baja. Devuelve 403 si el usuario carece de permiso y 404 si la cámara no existe o ya fue retirada. En instalaciones existentes, ejecuta un respaldo y aplica la migración de baja antes de usar esta versión.
+
 CU-01 está implementado mediante formulario Livewire, `CameraRegistrationService` y API Sanctum: `GET /api/cameras`, `POST /api/cameras` y `GET /api/cameras/{id}`. La consulta admite búsqueda y paginación. Todas las rutas exigen autenticación y cuenta activa; solo administrador/coordinador registran cámaras.
 
 Se valida IP opcional, campos obligatorios y longitudes. El inventario puede repetirse y la serie opcional es única; blancos opcionales se convierten en `null`. La restricción de SQLite resuelve también conflictos simultáneos. No se introduce activo fijo como requisito adicional.

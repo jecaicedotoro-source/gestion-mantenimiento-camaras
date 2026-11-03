@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\IClasificadorIncidencias;
 use App\Enums\IncidentCategory;
 use App\Exceptions\ClassificationUnavailable;
+use App\Models\Camera;
 use App\Models\Incident;
 use App\Models\IncidentClassification;
 use App\Models\User;
@@ -30,11 +31,18 @@ final class IncidentManagementService
             'description' => ['required', 'string', 'min:10', 'max:2000'],
         ])->validate();
 
-        return DB::transaction(fn (): Incident => Incident::create([
-            'camera_id' => $data['camera_id'],
-            'description' => $data['description'],
-            'reported_by' => $actor->id,
-        ]));
+        return DB::transaction(function () use ($actor, $data): Incident {
+            // Revalidar antes de guardar, incluso si el formulario se abrió antes de la baja.
+            if (Camera::query()->lockForUpdate()->find($data['camera_id']) === null) {
+                throw ValidationException::withMessages(['camera_id' => 'Selecciona una cámara del inventario activo.']);
+            }
+
+            return Incident::create([
+                'camera_id' => $data['camera_id'],
+                'description' => $data['description'],
+                'reported_by' => $actor->id,
+            ]);
+        }, 3);
     }
 
     /** La vista previa no se guarda como una segunda copia del texto enviado. */

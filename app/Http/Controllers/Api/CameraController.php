@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Camera;
 use App\Services\CameraRegistrationService;
+use App\Services\CameraRetirementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CameraController extends Controller
 {
+    public function destroy(Camera $camera, CameraRetirementService $service): JsonResponse
+    {
+        $service->retire($camera->id);
+
+        return response()->json(['message' => 'Cámara dada de baja correctamente.']);
+    }
+
     /**
      * Consulta las cámaras registradas.
      */

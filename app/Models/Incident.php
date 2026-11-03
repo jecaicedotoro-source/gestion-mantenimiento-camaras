@@ -36,7 +36,7 @@ class Incident extends Model
     /** @return BelongsTo<Camera, $this> */
     public function camera(): BelongsTo
     {
-        return $this->belongsTo(Camera::class);
+        return $this->belongsTo(Camera::class)->withTrashed();
     }
 
     /** @return HasMany<IncidentClassification, $this> */

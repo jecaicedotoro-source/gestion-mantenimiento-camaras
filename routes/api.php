@@ -22,6 +22,9 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:60,1'])->group(function (
         ->middleware('can:view-cameras')
         ->name('api.cameras.show');
 
+    Route::delete('/cameras/{camera}', [CameraController::class, 'destroy'])
+        ->name('api.cameras.destroy');
+
     // API de incidencias definida en el diseño del Módulo 2; comparte servicios con Livewire.
     Route::prefix('v1/incidencias')->group(function () {
         Route::post('/', [IncidentController::class, 'store']);
