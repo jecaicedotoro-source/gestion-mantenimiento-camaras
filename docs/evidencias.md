@@ -23,7 +23,7 @@ Se leyeron el taller original completo, el texto de Módulos 1/2 y el borrador l
 | Colección Postman | JSON válido, 23 scripts con sintaxis validada; 11 peticiones. No ejecutada en Postman |
 | Docker/CI YAML | Sintaxis de ambos YAML validada con Symfony; script de inicio con LF |
 
-**Suite final local:** 118 casos, **116 aprobados, 2 omitidos, 398 aserciones**, exit 0; duración informada por Pest 9,425 s. Se generó JUnit. Las omisiones corresponden a registro público deshabilitado mediante Fortify; no son pruebas fallidas. Comando: PHP 8.5 directo, `vendor/bin/pest --configuration phpunit.windows.xml --no-coverage --log-junit ../junit-final.xml`, con caché de vistas aislada. Pint global terminó `passed`.
+**Suite integrada local, anterior al último ajuste de idioma API:** 118 casos, **116 aprobados, 2 omitidos, 398 aserciones**, exit 0; duración informada por Pest 9,425 s. Se generó JUnit. Las omisiones corresponden a registro público deshabilitado mediante Fortify; no son pruebas fallidas. Comando: PHP 8.5 directo, `vendor/bin/pest --configuration phpunit.windows.xml --no-coverage --log-junit ../junit-final.xml`, con caché de vistas aislada. Pint global terminó `passed`.
 
 Una ejecución previa detectó dos aserciones heredadas de seguridad que esperaban texto inglés; se adaptaron para comprobar las etiquetas traducidas. No se cambió la funcionalidad ni se eliminaron las pruebas.
 
@@ -52,6 +52,9 @@ Rama publicada: `codex/consolidacion-mvp-usc`. [PR #1 en borrador](https://githu
 | feat: integrar incidencias y OpenAI con revisión humana y resiliencia | [413558b](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/413558b1725dfef07dc2ca8f9c0334ca76391cf8) |
 | build: integrar seguridad y APIs con Docker CI y comandos operativos | [69b1b0e](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/69b1b0e3d87130e04d1e80656a12afe6aa265ff0) |
 | docs: contrastar diez entregables y registrar evidencia reproducible | [7d4bf09](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/7d4bf09573a27c81cfc7e255a08e55d502e6b02d) |
+| fix: resolver tipos detectados en CI y excluir secretos de builds locales | [1889b98](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/1889b985dc89fbe8178656a05816567929f88da1) |
+| fix: esperar salud del contenedor antes de comprobar persistencia tras reinicio | [cb96191](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/cb96191e4bee8359f67a3154d21cd8b18ea75347) |
+| fix: responder errores API en español sin detalles internos y conservar evidencias CI | [1221227](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/commit/12212273b1708d44154a1c597b8a5b20d42feb2f) |
 
 Primera CI remota iniciada: [Actions 41633905889](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41633905889), con trabajos `ci` y `docker`. Su resultado se registra tras comprobarlo; no se deduce de la existencia del workflow. La revisión humana y la fusión se mantienen pendientes hasta efectuarse; los subagentes no se consideran revisores académicos ni un segundo integrante.
 
@@ -67,9 +70,21 @@ Artefactos de esa ejecución: [JUnit](https://github.com/jecaicedotoro-source/ge
 
 Última revisión de idioma: el framework devolvía literales ingleses en errores API estándar. Se normalizaron excepciones al español, sin datos internos incluso con debug activo, conservando cabeceras y validaciones. Se ejecutaron **6 pruebas adicionales aprobadas y 37 aserciones**. La CI final comprobará el conjunto integrado. Las respuestas JSON sintéticas de la demostración se imprimen con una marca identificable, sin tokens, para conservarlas de forma duradera en la documentación.
 
+### Resultado final de implementación
+
+La [CI final 41635991294](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41635991294) concluyó con **ambos trabajos aprobados**, sobre el código `12212273b1708d44154a1c597b8a5b20d42feb2f`, árbol `473b20a8e45b7b78738417baf23b0e9d05124b05`:
+
+- **124 casos: 122 aprobados, 2 omitidos, 435 aserciones**, configuración estándar. Pest informó 5,13 s. Las omisiones son exclusivamente registro público deshabilitado.
+- PHPStan nivel 7: `[OK] No errors`. Pint y compilación de recursos aprobados.
+- Docker: imagen construida, aplicación sana, doce migraciones aplicadas, creación HTTP 201, duplicado 422, consultas 200 y cámara idéntica antes/después de reiniciar conservando el volumen.
+- [Respuestas HTTP conservadas en el repositorio](evidencias/http-cu01.json), extraídas de la ejecución real con datos ficticios; no son respuestas inventadas ni contienen tokens.
+- Artefactos originales: [JUnit](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41635991294/artifacts/13230711808) y [demostración HTTP](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41635991294/artifacts/13230139593), con vencimiento el 10 de noviembre de 2026. La evidencia JSON y este registro permanecen versionados.
+
+El cierre posterior modifica documentación y evidencia, sin cambiar la implementación probada. El PR sigue abierto en borrador; no se declara revisión humana, fusión ni entrega al aula. Se prepara un PDF de avance verificable con las brechas que permanecen; su producción y revisión visual se confirman en el informe de entrega del chat.
+
 ## Límites de la evidencia
 
-- No se ejecutó Docker localmente porque no está instalado; la ejecución remota debe comprobarse independientemente.
+- No se ejecutó Docker localmente porque no está instalado; su ejecución remota sí fue comprobada en las CI aprobadas y enlazadas.
 - La interfaz compila y sus flujos tienen pruebas; falta inspección visual completa en navegador, móvil, teclado y temas. Computer Use no pudo iniciarse por fallo de su controlador, incluso después de reintento y reinicio.
 - Las pruebas de passkeys comprueban el callback real de autorización del paquete; falta una demostración con hardware WebAuthn.
 - El borrador académico declara autorización para desarrollo individual; falta acreditar la autorización original. No se inventan aportes de una pareja.

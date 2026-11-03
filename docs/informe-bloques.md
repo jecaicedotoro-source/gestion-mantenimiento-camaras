@@ -54,7 +54,7 @@ Las pruebas se ejecutan con SQLite aislado. Se revisan formato, compilación de 
 
 La documentación se integra al cierre de cada bloque y describe estado real, instalación, arquitectura, API, configuración, seguridad y limitaciones. Los cambios se organizan en commits descriptivos y una rama de desarrollo. La publicación, ejecución de CI, revisión y fusión de un PR requieren evidencia independiente y se registran solo cuando ocurran.
 
-**Estado:** comprobaciones locales disponibles y documentación en preparación. **Pendiente:** enlazar los commits/PR reales y registrar la revisión e integración efectivas. No se atribuyen contribuciones a un segundo integrante ni a personas que no hayan realizado esos aportes.
+**Estado:** rama y commits publicados, [PR #1 abierto en borrador](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1), documentación versionada y CI final aprobada con 122 pruebas, dos omitidas y 435 aserciones; análisis estático, formato, recursos y Docker correctos. Los enlaces están en las evidencias. **Pendiente:** revisión humana e integración efectiva. No se atribuyen contribuciones a un segundo integrante ni a personas que no hayan realizado esos aportes.
 
 ## Bloque 8 Entrega académica y sustentación
 

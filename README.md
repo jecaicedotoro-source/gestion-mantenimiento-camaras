@@ -136,6 +136,8 @@ La suite incluye casos positivos, negativos, autorización, preservación de ide
 
 Las excepciones públicas de la API se normalizan al español y ocultan trazas incluso con depuración local activa. Se conservan estado y cabeceras de límite (`Retry-After`), errores de validación por campo y la respuesta manual alternativa del servicio IA. Este último ajuste añadió seis pruebas aprobadas con 37 aserciones; su integración global se confirma en la CI final.
 
+**CI final del incremento aprobada:** [ejecución 41635991294](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41635991294), sobre el código `12212273`: **122 aprobadas, 2 omitidas y 435 aserciones**, PHPStan sin errores, Pint y build correctos. Docker verificó arranque, API y persistencia idéntica tras reiniciar. Se conservan [respuestas HTTP sintéticas sin credenciales](docs/evidencias/http-cu01.json).
+
 Última ejecución local del 3 de noviembre de 2026: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
 
 El [PR #1](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1) está abierto en borrador. La primera CI Linux confirmó los mismos 116 casos aprobados con configuración estándar y detectó seis avisos de tipos que se corrigieron sin desactivar reglas. Se añadieron exclusiones de credenciales Composer y cachés locales al contexto Docker; el estado final se mantiene en las evidencias.
