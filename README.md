@@ -31,6 +31,14 @@ Las instrucciones reproducibles se completarán junto con su verificación. `.en
 
 Roles existentes: administrador, coordinador, técnico y auxiliar. Fortify administra autenticación y verificación; Sanctum protege la API. Las reglas existentes permiten registrar cámaras a administrador y coordinador; CU-01 tiene al administrador como actor principal.
 
+### Bloque de usuarios consolidado
+
+`UserManagementService` concentra las operaciones y `UserPolicy` autoriza cada acción en el servidor. Los cambios se ejecutan en transacciones; en SQLite se adquiere un bloqueo de escritura antes de contar administradores activos.
+
+Las cuentas se desactivan y reactivan conservando identidad e historiales. Un administrador no puede desactivarse ni cambiar su propio rol; debe permanecer un administrador activo. Se revocan tokens Sanctum, sesiones y cookies de recuerdo al desactivar o modificar credenciales, correo o rol. `auth_version` impide revivir sesiones antiguas tras reactivar; también se invalidan desafíos 2FA previos. Contraseña y callback de passkeys rechazan cuentas inactivas. El perfil de una cuenta no administrativa permite desactivación con contraseña; no hay borrado físico.
+
+Se añadieron 22 pruebas de usuarios y se adaptaron las de perfil. La ejecución global intermedia verificó 105 pruebas aprobadas, dos omitidas y 309 aserciones. Los resultados finales y límites de la prueba de passkeys se documentan en `docs/evidencias.md`; el callback probado no equivale a una prueba con hardware WebAuthn.
+
 ## API HTTP
 
 Base existente: `GET /api/cameras` y `POST /api/cameras`, con `auth:sanctum` y permisos por rol. La documentación completa y una colección sin credenciales se incorporarán en el bloque CU-01.
