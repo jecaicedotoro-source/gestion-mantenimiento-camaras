@@ -168,6 +168,8 @@ Cada bloque incorpora código, pruebas y una actualización de este documento. L
 
 La rama `codex/consolidacion-mvp-usc` organiza la continuación por bloques; los enlaces verificables de commits/PR y el estado de CI están en [evidencias](docs/evidencias.md). La revisión e integración de un PR se registran solo cuando ocurren.
 
+Los paquetes de código incluyen este README y las evidencias. Se retiró la exclusión heredada del starter kit que omitía el README al exportar Git; el ZIP de entrega se comprueba sin secretos, bases ni dependencias locales.
+
 Se leyeron íntegramente el taller original del Módulo 3 y los textos de Módulos 1/2. Consultar [matriz de diez entregables](docs/matriz-entregables.md), [trazabilidad y diferencias con el diseño](docs/trazabilidad-diseno.md), [informe por bloques](docs/informe-bloques.md) y [guion de demostración](docs/demostracion.md). El PDF académico reúne evidencia y brechas; la entrega al aula, sustentación y video/demostración final corresponden al responsable académico.
 
 ## Funcionalidades pendientes y límites
