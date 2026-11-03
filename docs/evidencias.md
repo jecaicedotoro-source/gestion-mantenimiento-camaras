@@ -59,6 +59,8 @@ La primera ejecución Linux confirmó **116 aprobadas, 2 omitidas y 398 asercion
 
 Se reforzó `.dockerignore` para excluir también `auth.json`, cachés PHP locales que podrían incorporar configuración sensible y `public/storage`. La imagen regenera sus cachés desde las dependencias propias; no reutiliza la configuración del equipo del operador.
 
+La primera ejecución Docker sí construyó la imagen, aplicó migraciones, arrancó con salud correcta y verificó `/up`, POST 201, rechazo de serie duplicada 422 y consulta GET previa al reinicio. El trabajo se detuvo por `curl (52) Empty reply from server` al consultar inmediatamente después del reinicio; no demuestra pérdida de datos. Se corrigió la comprobación para esperar de nuevo al healthcheck de Compose antes de consultar. La persistencia tras reinicio requiere confirmación en la segunda ejecución. [Respuestas sintéticas del primer intento](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41633905889/artifacts/13229597488), retención siete días.
+
 ## Límites de la evidencia
 
 - No se ejecutó Docker localmente porque no está instalado; la ejecución remota debe comprobarse independientemente.

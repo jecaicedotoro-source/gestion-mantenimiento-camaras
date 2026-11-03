@@ -147,7 +147,9 @@ jobs:
             --header 'Accept: application/json' --output build/smoke/camera-before-restart.json \
             "http://127.0.0.1:8000/api/cameras/$camera_id"
           docker compose restart app
-          curl --fail --silent --show-error --retry 15 --retry-delay 2 --retry-connrefused http://127.0.0.1:8000/up > /dev/null
+          # Esperar salud evita consultar durante el cierre y la reapertura del servidor.
+          docker compose up -d --wait --wait-timeout 120
+          curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/up > /dev/null
           curl --fail --silent --show-error --header "Authorization: Bearer $api_token" \
             --header 'Accept: application/json' --output build/smoke/camera-after-restart.json \
             "http://127.0.0.1:8000/api/cameras/$camera_id"
