@@ -119,5 +119,10 @@
     "to": "a",
     "of": "de",
     "results": "resultados",
-    "Go to page :page": "Ir a la página :page"
+    "Go to page :page": "Ir a la página :page",
+    "Forbidden": "Acceso denegado",
+    "Not Found": "Recurso no encontrado",
+    "Server Error": "Error del servidor",
+    "Too Many Requests": "Demasiadas solicitudes",
+    "Page Expired": "La sesión ha caducado"
 }

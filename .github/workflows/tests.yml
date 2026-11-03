@@ -154,6 +154,8 @@ jobs:
             --header 'Accept: application/json' --output build/smoke/camera-after-restart.json \
             "http://127.0.0.1:8000/api/cameras/$camera_id"
           python3 -c 'import json; before=json.load(open("build/smoke/camera-before-restart.json"))["data"]; after=json.load(open("build/smoke/camera-after-restart.json"))["data"]; assert before == after; assert after["numero_serie"] == "CI-SERIE-001"'
+          # Solo datos sintéticos: esta línea permite conservar evidencia sin tokens fuera de artefactos temporales.
+          python3 -c 'import json,pathlib; evidence={p.stem:json.loads(p.read_text()) for p in pathlib.Path("build/smoke").glob("*.json")}; print("EVIDENCIA_HTTP_CU01="+json.dumps(evidence,ensure_ascii=True,separators=(",",":")))'
           unset api_token
           docker compose exec -T app php artisan migrate:status --no-ansi
 

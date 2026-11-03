@@ -46,7 +46,7 @@ El servidor valida la respuesta estructurada y las categorías del catálogo pro
 
 Se prepararon Dockerfile, Compose, almacenamiento persistente SQLite y script de inicio. El contenedor exige clave de aplicación, crea respaldo antes de migrar, utiliza configuración de producción sin depuración y conserva el volumen entre reinicios. La imagen excluye secretos y datos locales mediante sus reglas de construcción.
 
-**Estado:** archivos preparados; Docker CLI no está disponible en el entorno local de esta revisión. **Pendiente:** construcción, arranque, comprobación de salud, reinicio y persistencia de un registro ficticio, con resultado real conservado. No se declara el contenedor operativo solo por disponer del Dockerfile.
+**Verificación:** Docker CLI no está instalado localmente, pero la segunda CI remota aprobó construcción real de imagen, arranque con salud, migraciones, peticiones HTTP y comparación idéntica del registro ficticio después de reiniciar. El primer intento detectó una consulta anticipada tras el reinicio; se corrigió esperando al healthcheck. Enlaces y resultados están en las evidencias. Esto no supone un despliegue institucional de producción.
 
 ## Bloque 7 Calidad control de versiones y documentación
 

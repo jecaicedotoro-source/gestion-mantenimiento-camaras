@@ -61,6 +61,12 @@ Se reforzó `.dockerignore` para excluir también `auth.json`, cachés PHP local
 
 La primera ejecución Docker sí construyó la imagen, aplicó migraciones, arrancó con salud correcta y verificó `/up`, POST 201, rechazo de serie duplicada 422 y consulta GET previa al reinicio. El trabajo se detuvo por `curl (52) Empty reply from server` al consultar inmediatamente después del reinicio; no demuestra pérdida de datos. Se corrigió la comprobación para esperar de nuevo al healthcheck de Compose antes de consultar. La persistencia tras reinicio requiere confirmación en la segunda ejecución. [Respuestas sintéticas del primer intento](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41633905889/artifacts/13229597488), retención siete días.
 
+**Segunda CI aprobada completamente:** [Actions 41634878889](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41634878889), sobre `cb96191e4bee8359f67a3154d21cd8b18ea75347`. Los trabajos `ci` y `docker` concluyeron `success`. PHPStan informó `[OK] No errors`; Pest confirmó **116 aprobadas, 2 omitidas y 398 aserciones**; Pint y compilación frontend aprobados. Docker construyó, arrancó sano, aplicó las doce migraciones y comprobó registro HTTP 201, serie duplicada 422, consulta y comparación idéntica del registro antes y después de reiniciar. La espera por salud corrigió la carrera de disponibilidad anterior.
+
+Artefactos de esa ejecución: [JUnit](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41634878889/artifacts/13228963903) y [demostración HTTP CU-01](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41634878889/artifacts/13229802631). Contienen datos ficticios y tienen retención de siete días; los resultados y sus límites se conservan en este documento.
+
+Última revisión de idioma: el framework devolvía literales ingleses en errores API estándar. Se normalizaron excepciones al español, sin datos internos incluso con debug activo, conservando cabeceras y validaciones. Se ejecutaron **6 pruebas adicionales aprobadas y 37 aserciones**. La CI final comprobará el conjunto integrado. Las respuestas JSON sintéticas de la demostración se imprimen con una marca identificable, sin tokens, para conservarlas de forma duradera en la documentación.
+
 ## Límites de la evidencia
 
 - No se ejecutó Docker localmente porque no está instalado; la ejecución remota debe comprobarse independientemente.

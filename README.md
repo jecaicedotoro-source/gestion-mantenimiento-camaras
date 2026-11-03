@@ -134,9 +134,13 @@ php artisan view:cache
 
 La suite incluye casos positivos, negativos, autorización, preservación de identidad, CU-01 desde Livewire/API, integración simulada OpenAI, confirmación humana y comandos operativos. La CI ejecuta la configuración estándar y conserva JUnit. Los resultados y las limitaciones del entorno local se registran en [evidencias verificadas](docs/evidencias.md); no se afirma cobertura porcentual sin medirla.
 
+Las excepciones públicas de la API se normalizan al español y ocultan trazas incluso con depuración local activa. Se conservan estado y cabeceras de límite (`Retry-After`), errores de validación por campo y la respuesta manual alternativa del servicio IA. Este último ajuste añadió seis pruebas aprobadas con 37 aserciones; su integración global se confirma en la CI final.
+
 Última ejecución local del 3 de noviembre de 2026: **116 aprobadas, 2 omitidas, 398 aserciones**. Omisiones: registro público deshabilitado. Pint, build y compilación de plantillas aprobados. La configuración temporal local de Pest y la limitación de lectura de PHPStan se explican en las evidencias; los resultados de CI se registran por separado.
 
 El [PR #1](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/pull/1) está abierto en borrador. La primera CI Linux confirmó los mismos 116 casos aprobados con configuración estándar y detectó seis avisos de tipos que se corrigieron sin desactivar reglas. Se añadieron exclusiones de credenciales Composer y cachés locales al contexto Docker; el estado final se mantiene en las evidencias.
+
+La [segunda CI](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/runs/41634878889) aprobó completamente ambos trabajos: PHPStan sin errores, Pint/build y pruebas; Docker construyó, arrancó y verificó CU-01 mediante HTTP y persistencia del mismo registro después de reiniciar.
 
 ## Docker y ejecución reproducible
 
@@ -154,7 +158,7 @@ docker compose down
 
 Abrir `http://localhost:8000`. `down` conserva el volumen; **no añadir `--volumes` sobre datos que deban conservarse**. El comando con eliminación de volumen del workflow se limita a recursos efímeros de CI. El servidor incluido sirve a la demostración académica; un despliegue institucional requiere revisar servidor HTTP, TLS, copias, correo y operación.
 
-Docker no está instalado localmente en este entorno. La CI prepara construcción, arranque, salud HTTP y reinicio; su estado real se registra en las evidencias y el PR, sin asumir que los archivos equivalen a una ejecución aprobada.
+Docker no está instalado localmente en este entorno. La ejecución remota de CI sí verificó construcción, arranque, salud HTTP y persistencia después de reinicio; sus enlaces están en las evidencias. Esto acredita la demostración técnica reproducible y no implica un despliegue institucional de producción.
 
 ## Control de versiones y evidencias académicas
 
