@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Camera;
+use App\Services\CameraRetirementService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,6 +19,14 @@ new class extends Component {
     public function updatedSearch(): void
     {
         $this->resetPage();
+    }
+
+    public function retireCamera(int $id, CameraRetirementService $service): void
+    {
+        $service->retire($id);
+        $this->resetPage();
+
+        session()->flash('camera-retired', 'Cámara dada de baja correctamente.');
     }
 
     public function with(): array
@@ -61,6 +70,10 @@ new class extends Component {
 
     <flux:input label="Buscar cámaras" wire:model.live.debounce.300ms="search" placeholder="Buscar por código, serie o ubicación" />
 
+    @if (session('camera-retired'))
+        <p role="status" class="rounded-lg bg-teal-50 p-3 text-sm text-teal-900 dark:bg-teal-950 dark:text-teal-200">{{ session('camera-retired') }}</p>
+    @endif
+
     <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
         <table class="w-full text-left text-sm">
             <caption class="sr-only">Inventario de cámaras registradas en el sistema.</caption>
@@ -72,6 +85,9 @@ new class extends Component {
                     <th class="p-3">Modelo</th>
                     <th class="p-3">Ubicación</th>
                     <th class="p-3">Estado</th>
+                    @can('delete', \App\Models\Camera::class)
+                        <th class="p-3">Acciones</th>
+                    @endcan
                 </tr>
             </thead>
 
@@ -84,10 +100,19 @@ new class extends Component {
                         <td class="p-3">{{ $camera->modelo }}</td>
                         <td class="p-3">{{ $camera->ubicacion }}</td>
                         <td class="p-3"><span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $camera->estado === 'activo' ? 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200' : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200' }}">{{ __($camera->estado) }}</span></td>
+                        @can('delete', \App\Models\Camera::class)
+                            <td class="p-3">
+                                <flux:button size="sm" variant="danger" wire:click="retireCamera({{ $camera->id }})"
+                                    wire:confirm="¿Dar de baja esta cámara? Saldrá del inventario y sus incidencias se conservarán."
+                                    wire:loading.attr="disabled" wire:target="retireCamera({{ $camera->id }})">
+                                    Dar de baja
+                                </flux:button>
+                            </td>
+                        @endcan
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="p-6 text-center">
+                        <td colspan="{{ Gate::allows('delete', \App\Models\Camera::class) ? 7 : 6 }}" class="p-6 text-center">
                             No se encontraron cámaras.
                         </td>
                     </tr>

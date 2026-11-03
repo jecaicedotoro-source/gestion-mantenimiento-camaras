@@ -97,6 +97,10 @@ La baja está reservada a administradores activos. Retira la cámara de las cons
 
 `DELETE /api/cameras/{id}` requiere un token Sanctum de administrador y devuelve HTTP 200 al dar de baja. Devuelve 403 si el usuario carece de permiso y 404 si la cámara no existe o ya fue retirada. En instalaciones existentes, ejecuta un respaldo y aplica la migración de baja antes de usar esta versión.
 
+### Confirmación de baja en el inventario
+
+En **Inventario de cámaras**, el administrador encuentra **Dar de baja** junto a cada registro. La confirmación explica que la cámara dejará de aparecer en el inventario y sus incidencias seguirán disponibles. Al aceptar, el sistema comprueba el permiso en el servidor, actualiza el listado y muestra un mensaje de éxito. Cancelar mantiene la cámara en el inventario.
+
 CU-01 está implementado mediante formulario Livewire, `CameraRegistrationService` y API Sanctum: `GET /api/cameras`, `POST /api/cameras` y `GET /api/cameras/{id}`. La consulta admite búsqueda y paginación. Todas las rutas exigen autenticación y cuenta activa; solo administrador/coordinador registran cámaras.
 
 Se valida IP opcional, campos obligatorios y longitudes. El inventario puede repetirse y la serie opcional es única; blancos opcionales se convierten en `null`. La restricción de SQLite resuelve también conflictos simultáneos. No se introduce activo fijo como requisito adicional.
