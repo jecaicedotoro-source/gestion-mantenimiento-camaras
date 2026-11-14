@@ -14,6 +14,11 @@ final class IncidentPolicy
             && in_array($user->role?->code, ['administrador', 'coordinador', 'tecnico', 'auxiliar'], true);
     }
 
+    public function view(User $user, Incident $incident): bool
+    {
+        return $this->viewAny($user);
+    }
+
     public function create(User $user): bool
     {
         return $this->viewAny($user) && in_array($user->role?->code, ['administrador', 'coordinador', 'tecnico'], true);

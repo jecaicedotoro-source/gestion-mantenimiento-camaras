@@ -30,7 +30,7 @@ final class IncidentController extends Controller
 
     public function show(Incident $incident): JsonResponse
     {
-        Gate::authorize('viewAny', Incident::class);
+        Gate::authorize('view', $incident);
 
         return response()->json(['data' => $this->present($incident)]);
     }
