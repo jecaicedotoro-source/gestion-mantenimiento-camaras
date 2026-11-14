@@ -1,6 +1,7 @@
 <?php
 
 use App\Contracts\IClasificadorIncidencias;
+use Illuminate\Support\Facades\Gate;
 use App\Data\IncidentSuggestion;
 use App\Exceptions\ClassificationUnavailable;
 use App\Models\Camera;
@@ -93,4 +94,50 @@ test('API rechaza decisiones inventadas y cámaras inexistentes', function () {
     $this->postJson('/api/v1/incidencias', ['camera_id' => 999999, 'description' => 'Una falla técnica de prueba.'])
         ->assertUnprocessable()->assertJsonValidationErrors('camera_id');
     expect(Incident::count())->toBe(1)->and($incident->classifications()->count())->toBe(0);
+});
+
+test('API aplica la autorización view en consultas individuales', function () {
+    $reporter = apiIncidentUser('tecnico');
+
+    $incident = app(IncidentManagementService::class)->register(
+        $reporter,
+        apiIncidentCamera()->id,
+        'La cámara pierde conexión de forma repetida.'
+    );
+
+    $path = '/api/v1/incidencias/'.$incident->id;
+
+    // Los cuatro roles autorizados pueden consultar incidencias.
+    foreach (['administrador', 'coordinador', 'tecnico', 'auxiliar'] as $role) {
+        $user = apiIncidentUser($role);
+
+        expect(Gate::forUser($user)->allows('view', $incident))->toBeTrue();
+
+        Sanctum::actingAs($user);
+
+        $this->getJson($path)
+            ->assertOk()
+            ->assertJsonPath('data.id', $incident->id);
+    }
+
+    // Un usuario sin rol institucional no puede consultar.
+    $withoutRole = User::factory()->create([
+        'role_id' => null,
+        'is_active' => true,
+    ]);
+
+    expect(Gate::forUser($withoutRole)->allows('view', $incident))->toBeFalse();
+
+    Sanctum::actingAs($withoutRole);
+
+    $this->getJson($path)->assertForbidden();
+
+    // Una cuenta inactiva tampoco puede consultar.
+    $inactive = apiIncidentUser('administrador', false);
+
+    expect(Gate::forUser($inactive)->allows('view', $incident))->toBeFalse();
+
+    Sanctum::actingAs($inactive);
+
+    $this->getJson($path)->assertForbidden();
 });
