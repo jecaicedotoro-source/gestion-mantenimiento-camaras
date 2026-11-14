@@ -16,7 +16,7 @@ final class IncidentPolicy
 
     public function view(User $user, Incident $incident): bool
     {
-    return $this->viewAny($user);
+        return $this->viewAny($user);
     }
 
     public function create(User $user): bool

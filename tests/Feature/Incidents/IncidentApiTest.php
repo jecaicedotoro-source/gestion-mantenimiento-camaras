@@ -1,7 +1,6 @@
 <?php
 
 use App\Contracts\IClasificadorIncidencias;
-use Illuminate\Support\Facades\Gate;
 use App\Data\IncidentSuggestion;
 use App\Exceptions\ClassificationUnavailable;
 use App\Models\Camera;
@@ -9,6 +8,7 @@ use App\Models\Incident;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\IncidentManagementService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Tests\Fakes\FakeIncidentClassifier;
