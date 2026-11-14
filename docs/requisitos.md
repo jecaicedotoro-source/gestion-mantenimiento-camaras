@@ -1,19 +1,51 @@
-
 # Requisitos - Sistema Web de Inventario y Mantenimiento de Cámaras de Seguridad
 
-## Descripción
+## 1. Descripción del proyecto
 
-El proyecto consiste en desarrollar un prototipo de aplicación web para la gestión del inventario, las incidencias y el mantenimiento de cámaras de seguridad de la Ciudadela Pampalinda de la Universidad Santiago de Cali (USC).
+El proyecto consiste en desarrollar una aplicación web para la administración del inventario, las incidencias y los mantenimientos de cámaras de seguridad de la Ciudadela Pampalinda de la Universidad Santiago de Cali (USC).
 
-El sistema contempla autenticación de usuarios, autorización basada en roles, registro y consulta de cámaras, gestión de incidencias y clasificación asistida mediante inteligencia artificial con OpenAI API y revisión humana.
+El sistema busca centralizar la información de los dispositivos, facilitar la identificación y consulta de cámaras de seguridad, registrar incidencias técnicas y mantener la trazabilidad de las intervenciones realizadas sobre los equipos.
 
-La aplicación utiliza PHP 8.5, Laravel 13, Blade, Livewire 4, Tailwind CSS 4, Flux UI, SQLite, PHPUnit/Pest y Git/GitHub, bajo una arquitectura monolítica modular organizada por capas.
+El prototipo dispone de autenticación de usuarios, autorización basada en roles, registro y consulta de cámaras, servicios API REST para la gestión de información y clasificación asistida de incidencias mediante inteligencia artificial, con revisión y confirmación humana.
 
-El alcance de esta especificación se limita a las funcionalidades existentes o sujetas a verificación, considerando un plazo máximo de dos días para consolidar y presentar el MVP.
+La aplicación utiliza las siguientes tecnologías:
+
+- **Backend:** PHP 8.5 y Laravel 13.
+- **Frontend:** Blade, Livewire 4, Tailwind CSS 4 y Flux UI.
+- **Base de datos:** SQLite.
+- **Pruebas automatizadas:** PHPUnit/Pest.
+- **Control de versiones:** Git y GitHub.
+- **Integración de inteligencia artificial:** OpenAI API.
+- **Arquitectura:** Monolítica modular organizada por capas.
+
+La especificación inicial comprendía ocho historias de usuario relacionadas con autenticación, autorización, inventario, incidencias e inteligencia artificial.
+
+Posteriormente, se amplió el backlog con cuatro historias correspondientes al módulo de mantenimientos, agrupadas en la épica EP-03.
+
+Esta ampliación se encuentra en fase de análisis y planificación. No debe confundirse con funcionalidades ya implementadas.
 
 ---
 
-## Historias de usuario
+## 2. Objetivos del sistema
+
+### Objetivo general
+
+Desarrollar un sistema web que permita administrar de manera centralizada el inventario, las incidencias y los registros de mantenimiento de las cámaras de seguridad de la Universidad Santiago de Cali.
+
+### Objetivos específicos
+
+1. Gestionar el acceso al sistema mediante autenticación y autorización basada en roles.
+2. Registrar y consultar las cámaras de seguridad de la institución.
+3. Aplicar reglas de negocio que garanticen la integridad de los datos del inventario.
+4. Registrar y consultar incidencias asociadas a las cámaras.
+5. Incorporar clasificación asistida de incidencias mediante inteligencia artificial con supervisión humana.
+6. Incorporar, en una nueva iteración, el registro y la consulta de mantenimientos preventivos y correctivos.
+7. Mantener trazabilidad entre las cámaras, las incidencias y las intervenciones técnicas.
+8. Verificar el funcionamiento del sistema mediante pruebas automatizadas y evidencias técnicas.
+
+---
+
+## 3. Historias de usuario
 
 ### HU-01: Autenticación de usuarios
 
@@ -35,11 +67,14 @@ Como usuario registrado, quiero iniciar sesión en el sistema, para acceder de f
 - **Cuando** intenta iniciar sesión.
 - **Entonces** el sistema rechaza el acceso y muestra un mensaje de error sin revelar información sensible.
 
-**Prioridad:** Alta.
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas de autenticación.
+**Evidencia:**
+
+- `tests/Feature/Auth/AuthenticationTest.php`
+- Pruebas automatizadas de autenticación, contraseñas incorrectas y cierre de sesión aprobadas.
 
 ---
 
@@ -63,11 +98,23 @@ Como administrador, quiero que las operaciones del sistema estén protegidas med
 - **Cuando** intenta acceder a una operación protegida.
 - **Entonces** el sistema rechaza la solicitud sin modificar la información almacenada.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas**
+
+- El administrador puede consultar y registrar cámaras.
+- El coordinador puede consultar y registrar cámaras.
+- El técnico puede consultar cámaras, pero no registrarlas.
+- El auxiliar puede consultar cámaras, pero no registrarlas.
+- Los usuarios sin rol institucional no pueden acceder al inventario.
+
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas de autorización y revisión de roles.
+**Evidencia:**
+
+- `tests/Feature/CameraAuthorizationTest.php`
+- `tests/Feature/CameraWebAccessTest.php`
+- `tests/Feature/Api/CameraApiTest.php`
 
 ---
 
@@ -97,11 +144,25 @@ Como usuario autorizado, quiero registrar cámaras de seguridad en el inventario
 - **Cuando** se intenta registrar otra cámara con ese mismo número de serie.
 - **Entonces** el sistema rechaza el registro y mantiene la integridad de la información.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas**
+
+- Los códigos de inventario pueden repetirse.
+- Los números de serie proporcionados deben ser únicos.
+- Se permiten números de serie nulos.
+- Los campos obligatorios no pueden estar vacíos.
+- Las direcciones IP deben cumplir las validaciones establecidas.
+- El registro requiere autorización.
+
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas de registro, validaciones y persistencia.
+**Evidencia:**
+
+- `tests/Feature/CameraRegistrationTest.php`
+- `tests/Feature/CameraCompletenessTest.php`
+- `tests/Feature/Api/CameraExecutionPlanTest.php`
+- `tests/Feature/Api/CameraApiTest.php`
 
 ---
 
@@ -125,11 +186,23 @@ Como usuario autorizado, quiero consultar las cámaras registradas, para conocer
 - **Cuando** el sistema procesa la consulta.
 - **Entonces** devuelve una respuesta controlada indicando que el recurso no fue encontrado.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas**
+
+- La consulta requiere autenticación y autorización.
+- Los roles institucionales autorizados pueden consultar el inventario.
+- Los usuarios sin rol no pueden acceder a la información protegida.
+- Los datos consultados corresponden a los registros persistidos.
+
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante consultas a la aplicación o API REST.
+**Evidencia:**
+
+- `tests/Feature/CameraAuthorizationTest.php`
+- `tests/Feature/CameraCompletenessTest.php`
+- `tests/Feature/CameraWebAccessTest.php`
+- `tests/Feature/Api/CameraApiTest.php`
 
 ---
 
@@ -153,11 +226,22 @@ Como usuario autorizado, quiero registrar incidencias relacionadas con las cáma
 - **Cuando** el sistema procesa la solicitud.
 - **Entonces** devuelve los errores correspondientes y no almacena información inválida.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas**
+
+- El registro requiere autenticación y autorización.
+- La incidencia debe estar relacionada con una cámara existente.
+- Los datos deben cumplir las reglas de validación.
+- La información debe persistir en SQLite.
+- La clasificación mediante IA no reemplaza la decisión humana.
+
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas de API y persistencia de incidencias.
+**Evidencia:**
+
+- `tests/Feature/Incidents/IncidentApiTest.php`
+- `tests/Feature/Incidents/IncidentWorkflowTest.php`
 
 ---
 
@@ -181,11 +265,22 @@ Como usuario autorizado, quiero consultar la información de una incidencia regi
 - **Cuando** el sistema procesa la solicitud.
 - **Entonces** devuelve una respuesta controlada de recurso no encontrado.
 
-**Prioridad:** Media.
+**Reglas de negocio verificadas**
+
+- La consulta requiere autenticación y autorización.
+- La información corresponde a incidencias persistidas.
+- Las categorías sugeridas por IA y las confirmadas por usuarios deben mantenerse diferenciadas.
+- Los errores de la API no deben revelar detalles internos.
+
+**Prioridad:** Media (P1).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas del endpoint de consulta de incidencias.
+**Evidencia:**
+
+- `tests/Feature/Incidents/IncidentApiTest.php`
+- `tests/Feature/Incidents/IncidentWorkflowTest.php`
+- `tests/Feature/Api/ApiErrorResponsesTest.php`
 
 ---
 
@@ -215,11 +310,38 @@ Como usuario autorizado, quiero solicitar una sugerencia de clasificación de un
 - **Cuando** el sistema intenta obtener una clasificación.
 - **Entonces** devuelve un error controlado y no modifica automáticamente la categoría de la incidencia.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas mediante pruebas automatizadas**
 
-**Estado:** Pendiente.
+- La solicitud requiere autenticación y autorización.
+- El sistema exige consentimiento para utilizar el proveedor.
+- La IA propone una clasificación, pero no toma la decisión final.
+- Las respuestas inválidas deben rechazarse.
+- Los errores del proveedor deben tratarse de forma controlada.
+- Las claves y detalles internos no deben exponerse.
 
-**Evidencia:** Por verificar mediante pruebas automatizadas y, cuando esté disponible, una solicitud real a OpenAI API.
+**Prioridad:** Alta (P0).
+
+**Estado:** Pendiente de verificación real.
+
+**Evidencia:**
+
+- `tests/Feature/Incidents/OpenAIClassifierTest.php`
+- `tests/Feature/Incidents/IncidentWorkflowTest.php`
+- `tests/Feature/Incidents/IncidentApiTest.php`
+
+**Actividades pendientes**
+
+- [x] Implementar el adaptador OpenAI.
+- [x] Validar las respuestas del clasificador.
+- [x] Implementar el consentimiento.
+- [x] Manejar los errores del proveedor.
+- [x] Ejecutar las pruebas automatizadas.
+- [ ] Verificar una clasificación exitosa mediante una solicitud real a OpenAI API.
+- [ ] Registrar evidencia de la respuesta real y su presentación para revisión humana.
+
+**Observación**
+
+Las pruebas automatizadas son satisfactorias, pero no acreditan por sí solas una conexión real exitosa con OpenAI API.
 
 ---
 
@@ -243,17 +365,288 @@ Como usuario autorizado, quiero revisar y confirmar la categoría de una inciden
 - **Cuando** el sistema procesa la solicitud.
 - **Entonces** rechaza la modificación y conserva la información registrada previamente.
 
-**Prioridad:** Alta.
+**Reglas de negocio verificadas**
+
+- La decisión final corresponde a un usuario autorizado.
+- La categoría sugerida y la confirmada deben permanecer diferenciadas.
+- Las categorías inválidas deben rechazarse.
+- La clasificación manual puede realizarse cuando el proveedor de IA falla.
+- Las decisiones confirmadas deben conservar su trazabilidad.
+
+**Prioridad:** Alta (P0).
 
 **Estado:** Hecha.
 
-**Evidencia:** Por verificar mediante pruebas de actualización de categorías y persistencia.
+**Evidencia:**
+
+- `tests/Feature/Incidents/IncidentWorkflowTest.php`
+- `tests/Feature/Incidents/IncidentApiTest.php`
 
 ---
 
-## Requisitos no funcionales
+## 4. Épica EP-03: Gestión de Mantenimientos de Cámaras de Seguridad
 
-Los siguientes criterios cuantitativos constituyen objetivos de aceptación propuestos para la evaluación académica. No representan resultados ya comprobados.
+**Tipo:** Épica funcional.
+
+**Estado:** Propuesta de implementación.
+
+**Objetivo**
+
+Incorporar funcionalidades que permitan registrar, clasificar y consultar intervenciones de mantenimiento sobre las cámaras de seguridad de la USC, manteniendo la trazabilidad de las actuaciones técnicas y su relación con las incidencias detectadas.
+
+**Alcance inicial**
+
+- HU-09: Registro de mantenimientos.
+- HU-10: Consulta del historial de mantenimientos.
+- HU-11: Clasificación de mantenimientos preventivos y correctivos.
+- HU-12: Asociación de mantenimientos con incidencias.
+
+Las cuatro historias representan una ampliación del backlog y permanecerán pendientes hasta completar su implementación y verificación.
+
+---
+
+### HU-09: Registro de mantenimientos de cámaras
+
+**Historia de usuario**
+
+Como usuario autorizado, quiero registrar las intervenciones de mantenimiento realizadas a las cámaras de seguridad, para conservar información técnica de las actividades ejecutadas.
+
+**Criterios de aceptación**
+
+**CA-09.1: Registro exitoso**
+
+- **Dado** que existe una cámara registrada y el usuario tiene autorización.
+- **Cuando** introduce los datos obligatorios válidos de un mantenimiento.
+- **Entonces** el sistema guarda la intervención en SQLite y la relaciona con la cámara correspondiente.
+
+**CA-09.2: Cámara inexistente**
+
+- **Dado** que se intenta registrar un mantenimiento para una cámara inexistente.
+- **Cuando** el usuario envía el registro.
+- **Entonces** el sistema rechaza la operación y no almacena información inconsistente.
+
+**CA-09.3: Datos incompletos**
+
+- **Dado** que faltan campos obligatorios.
+- **Cuando** el usuario intenta guardar el mantenimiento.
+- **Entonces** el sistema muestra los errores correspondientes y no almacena el registro.
+
+**Datos propuestos para el registro**
+
+- Cámara intervenida.
+- Fecha del mantenimiento.
+- Tipo de mantenimiento.
+- Descripción de la intervención.
+- Responsable de la intervención.
+- Resultado del mantenimiento.
+
+**Reglas de negocio propuestas**
+
+- Cada mantenimiento debe asociarse a una cámara existente.
+- El registro requiere autenticación y autorización.
+- Los campos obligatorios deben validarse.
+- La información debe persistir en SQLite.
+- Los datos del mantenimiento deben permitir identificar la intervención realizada.
+- La relación con una incidencia se gestionará mediante HU-12.
+
+**Prioridad:** Alta (P0).
+
+**Estado:** Pendiente.
+
+**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+
+**Ubicación Kanban:** Backlog.
+
+---
+
+### HU-10: Consulta del historial de mantenimientos
+
+**Historia de usuario**
+
+Como usuario autorizado, quiero consultar el historial de mantenimientos de una cámara de seguridad, para conocer las intervenciones efectuadas y facilitar su seguimiento técnico.
+
+**Criterios de aceptación**
+
+**CA-10.1: Consulta exitosa**
+
+- **Dado** que una cámara tiene mantenimientos registrados.
+- **Cuando** el usuario consulta su historial.
+- **Entonces** el sistema muestra las intervenciones asociadas, incluyendo fecha, tipo, descripción y resultado.
+
+**CA-10.2: Historial vacío**
+
+- **Dado** que una cámara no tiene mantenimientos registrados.
+- **Cuando** el usuario consulta su historial.
+- **Entonces** el sistema muestra un mensaje indicando que no existen intervenciones registradas.
+
+**CA-10.3: Acceso no autorizado**
+
+- **Dado** que un usuario no cuenta con permisos de consulta.
+- **Cuando** intenta acceder al historial de mantenimientos.
+- **Entonces** el sistema rechaza la solicitud sin revelar información protegida.
+
+**Reglas de negocio propuestas**
+
+- La consulta requiere autenticación y autorización.
+- Los registros deben corresponder a la cámara seleccionada.
+- La consulta no debe modificar información almacenada.
+- El historial debe permitir identificar las intervenciones realizadas.
+- Los mantenimientos deben recuperarse de la base de datos.
+
+**Prioridad:** Alta (P0).
+
+**Estado:** Pendiente.
+
+**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+
+**Ubicación Kanban:** Backlog.
+
+---
+
+### HU-11: Clasificación de mantenimientos preventivos y correctivos
+
+**Historia de usuario**
+
+Como usuario autorizado, quiero identificar cada mantenimiento como preventivo o correctivo, para diferenciar las intervenciones periódicas de aquellas destinadas a corregir fallos.
+
+**Criterios de aceptación**
+
+**CA-11.1: Mantenimiento preventivo**
+
+- **Dado** que el usuario registra un mantenimiento con datos válidos.
+- **Cuando** selecciona el tipo preventivo.
+- **Entonces** el sistema almacena el mantenimiento identificado como preventivo.
+
+**CA-11.2: Mantenimiento correctivo**
+
+- **Dado** que el usuario registra un mantenimiento con datos válidos.
+- **Cuando** selecciona el tipo correctivo.
+- **Entonces** el sistema almacena el mantenimiento identificado como correctivo.
+
+**CA-11.3: Tipo inválido**
+
+- **Dado** que se proporciona un tipo de mantenimiento diferente de los permitidos.
+- **Cuando** el sistema valida la solicitud.
+- **Entonces** rechaza el registro y comunica el error sin almacenar el dato inválido.
+
+**Reglas de negocio propuestas**
+
+- Los tipos de mantenimiento inicialmente permitidos serán preventivo y correctivo.
+- Todo mantenimiento deberá tener un tipo definido.
+- El tipo seleccionado debe persistir en SQLite.
+- La clasificación deberá poder consultarse posteriormente.
+- La selección del tipo formará parte del proceso de registro definido en HU-09.
+
+**Prioridad:** Alta (P0).
+
+**Estado:** Pendiente.
+
+**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+
+**Ubicación Kanban:** Backlog.
+
+**Observación técnica**
+
+HU-11 complementa funcionalmente a HU-09. No se requiere una pantalla independiente para clasificar los mantenimientos; la selección del tipo podrá realizarse dentro del formulario de registro.
+
+---
+
+### HU-12: Asociación de mantenimientos con incidencias
+
+**Historia de usuario**
+
+Como usuario autorizado, quiero asociar un mantenimiento con una incidencia registrada, para mantener la trazabilidad entre el fallo detectado y la intervención realizada.
+
+**Criterios de aceptación**
+
+**CA-12.1: Asociación correcta**
+
+- **Dado** que existe una incidencia registrada para una cámara.
+- **Cuando** el usuario autorizado registra un mantenimiento relacionado con esa incidencia.
+- **Entonces** el sistema almacena la asociación entre el mantenimiento, la incidencia y la cámara.
+
+**CA-12.2: Incidencia inexistente o incompatible**
+
+- **Dado** que se selecciona una incidencia inexistente o perteneciente a otra cámara.
+- **Cuando** el usuario intenta guardar la asociación.
+- **Entonces** el sistema rechaza la operación y evita relaciones inconsistentes.
+
+**CA-12.3: Consulta de la relación**
+
+- **Dado** que un mantenimiento está asociado a una incidencia.
+- **Cuando** el usuario autorizado consulta la intervención.
+- **Entonces** el sistema permite identificar la incidencia relacionada.
+
+**Reglas de negocio propuestas**
+
+- La incidencia relacionada debe existir previamente.
+- La incidencia asociada debe pertenecer a la misma cámara del mantenimiento.
+- La asociación debe persistir en SQLite.
+- Los permisos de asociación deben definirse antes de implementar.
+- La asociación será opcional, puesto que no todos los mantenimientos estarán relacionados con una incidencia.
+- Los mantenimientos preventivos podrán registrarse sin incidencia asociada.
+
+**Prioridad:** Alta (P0).
+
+**Estado:** Pendiente.
+
+**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+
+**Ubicación Kanban:** Backlog.
+
+---
+
+## 5. Alcance funcional del módulo de mantenimientos
+
+La implementación inicial de la épica EP-03 estará limitada a las cuatro historias HU-09, HU-10, HU-11 y HU-12.
+
+### Funcionalidades incluidas
+
+1. Registrar un mantenimiento asociado a una cámara existente.
+2. Registrar fecha, descripción, responsable y resultado de la intervención.
+3. Identificar el mantenimiento como preventivo o correctivo.
+4. Consultar los mantenimientos registrados de una cámara.
+5. Asociar opcionalmente un mantenimiento con una incidencia de la misma cámara.
+6. Validar los datos obligatorios y las relaciones entre registros.
+7. Aplicar autenticación y autorización a las operaciones implementadas.
+
+### Funcionalidades fuera del alcance inicial
+
+- Programación automática de mantenimientos preventivos.
+- Generación de notificaciones y recordatorios.
+- Gestión de proveedores de mantenimiento.
+- Inventario y consumo de repuestos.
+- Órdenes de trabajo complejas.
+- Asignación automática de técnicos.
+- Mantenimiento predictivo mediante inteligencia artificial.
+- Generación automática de informes de mantenimiento.
+
+Estas funcionalidades podrán evaluarse en futuras iteraciones, pero no forman parte del compromiso actual de implementación.
+
+---
+
+## 6. Aspectos pendientes de definición del módulo de mantenimientos
+
+Antes de comenzar la programación deberán confirmarse las siguientes decisiones:
+
+1. **Roles autorizados:** definir qué roles pueden registrar y consultar mantenimientos.
+2. **Responsable de la intervención:** establecer si el responsable será un usuario registrado o si podrá identificarse mediante otro dato.
+3. **Campos obligatorios:** determinar qué información es imprescindible para guardar un mantenimiento.
+4. **Resultado de la intervención:** definir si será un texto descriptivo o un conjunto de valores predefinidos.
+5. **Relación con incidencias:** confirmar si se permitirá asociar más de un mantenimiento a una incidencia.
+6. **Historial de mantenimiento:** definir el orden de presentación y los campos visibles.
+7. **Persistencia:** establecer las relaciones y restricciones de integridad correspondientes.
+8. **Permisos:** definir qué operaciones estarán disponibles para administrador, coordinador, técnico y auxiliar.
+
+Estas decisiones deberán incorporarse al diseño funcional antes de implementar las historias.
+
+---
+
+## 7. Requisitos no funcionales
+
+Se mantienen cuatro requisitos no funcionales relacionados con rendimiento, seguridad, disponibilidad y usabilidad.
+
+Los valores establecidos corresponden a objetivos de aceptación para el prototipo y no representan resultados medidos ni garantías de operación en producción.
 
 ### RNF-01: Rendimiento
 
@@ -271,6 +664,8 @@ Registrar los tiempos de respuesta y calcular el percentil 95.
 
 **Estado:** Pendiente de verificación.
 
+---
+
 ### RNF-02: Seguridad
 
 **Requisito**
@@ -283,9 +678,13 @@ El 100 % de los casos de acceso no autorizado incluidos en la matriz de pruebas 
 
 **Verificación**
 
-Ejecutar pruebas de autenticación y autorización sobre los endpoints y operaciones incluidas en el alcance del MVP.
+Ejecutar pruebas de autenticación y autorización sobre las operaciones incluidas en el alcance del MVP.
 
-**Estado:** Pendiente de verificación.
+**Estado:** Pendiente de verificación integral del requisito.
+
+**Observación:** Existen pruebas automatizadas satisfactorias de autenticación y autorización.
+
+---
 
 ### RNF-03: Disponibilidad local
 
@@ -302,6 +701,8 @@ El sistema deberá responder correctamente a 10 solicitudes consecutivas realiza
 Ejecutar las solicitudes, registrar los códigos HTTP y comprobar la ausencia de errores internos.
 
 **Estado:** Pendiente de verificación.
+
+---
 
 ### RNF-04: Usabilidad
 
@@ -321,7 +722,7 @@ Ejecutar las dos operaciones y documentar su resultado mediante una lista de com
 
 ---
 
-## Cambios frente a la IA
+## 8. Cambios frente a la IA
 
 Durante la revisión de los requisitos inicialmente generados con asistencia de inteligencia artificial, se identificaron dos condiciones que no se ajustaban adecuadamente al alcance del MVP.
 
@@ -337,11 +738,15 @@ Se sustituyó esta condición por una verificación de funcionamiento local medi
 
 **Justificación**
 
-El proyecto corresponde a un prototipo académico ejecutado en un entorno de desarrollo local. No se ha establecido un despliegue productivo ni una infraestructura de alta disponibilidad.
+El proyecto corresponde a un prototipo académico ejecutado en un entorno de desarrollo local.
+
+No se ha establecido un despliegue productivo ni una infraestructura de alta disponibilidad.
 
 Por esta razón, exigir métricas propias de un servicio en producción no resulta representativo del alcance actual del sistema.
 
-La corrección permite evaluar su disponibilidad durante la demostración sin ampliar la infraestructura del proyecto.
+La corrección permite evaluar su funcionamiento durante la demostración sin ampliar la infraestructura del proyecto.
+
+---
 
 ### Cambio 2: Corrección del requisito de usabilidad
 
@@ -361,37 +766,23 @@ La realización de una evaluación formal con participantes externos requiere or
 
 La corrección permite verificar aspectos básicos de usabilidad sin comprometer la entrega de las funcionalidades principales.
 
+---
+
 ### Resultado de los cambios
 
 Se mantienen exactamente cuatro requisitos no funcionales relacionados con rendimiento, seguridad, disponibilidad y usabilidad.
 
-Las modificaciones permiten establecer condiciones de aceptación más realistas y acordes con el entorno técnico y académico del proyecto.
+Las modificaciones permiten establecer condiciones de aceptación más realistas para el entorno técnico y académico del proyecto.
 
 ---
 
-## Aspectos pendientes de aclaración
+## 9. Estado de implementación
 
-Las siguientes cuestiones deberán contrastarse con el código fuente, las rutas y las pruebas existentes:
+La implementación del sistema se ha verificado parcialmente mediante pruebas automatizadas ejecutadas con el comando:
 
-1. **HU-01:** Confirmar los estados de cuenta y el comportamiento real de las sesiones.
-2. **HU-02:** Identificar los roles y permisos efectivos de cada operación.
-3. **HU-03:** Confirmar los campos obligatorios y el tratamiento de números de serie nulos o vacíos.
-4. **HU-04:** Confirmar las operaciones y campos de consulta del inventario.
-5. **HU-05:** Verificar las validaciones y la persistencia de las incidencias.
-6. **HU-06:** Comprobar el endpoint y la información disponible en las consultas.
-7. **HU-07:** Confirmar el funcionamiento real de OpenAI API y sus mecanismos de error.
-8. **HU-08:** Verificar los permisos y las reglas para confirmar una categoría.
+`php artisan test`
 
-No se incorpora una historia adicional de ejecución o planificación de mantenimiento porque no se dispone de evidencia suficiente sobre la implementación completa de dicho flujo.
-
----
-
-
-## Estado de implementación
-
-Se ejecutó la suite de pruebas automatizadas del proyecto mediante el comando `php artisan test`.
-
-### Resultados obtenidos
+### Resultados de la ejecución documentada
 
 - Pruebas aprobadas: 129.
 - Pruebas omitidas: 2.
@@ -399,41 +790,201 @@ Se ejecutó la suite de pruebas automatizadas del proyecto mediante el comando `
 - Aserciones ejecutadas: 601.
 - Tiempo de ejecución: 13,11 segundos.
 
-Las dos pruebas omitidas corresponden al registro público de usuarios, funcionalidad deshabilitada por decisión de diseño del MVP.
+Las dos pruebas omitidas corresponden a escenarios de registro público de usuarios, funcionalidad deshabilitada por decisión de diseño.
+
+Estos resultados fueron obtenidos antes de incorporar las historias HU-09, HU-10, HU-11 y HU-12 a la documentación.
+
+No representan resultados de pruebas automatizadas del módulo de mantenimientos.
 
 ### Estado de las historias de usuario
 
 | Historia | Estado | Evidencia |
 |---|---|---|
-| HU-01 | Hecha | Pruebas de autenticación y control de sesiones aprobadas. |
-| HU-02 | Hecha | Pruebas de autorización y permisos por roles aprobadas. |
+| HU-01 | Hecha | Pruebas de autenticación aprobadas. |
+| HU-02 | Hecha | Pruebas de autorización y roles aprobadas. |
 | HU-03 | Hecha | Pruebas de registro, validaciones y persistencia aprobadas. |
-| HU-04 | Hecha | Pruebas de consulta del inventario mediante API y Livewire aprobadas. |
-| HU-05 | Hecha | Pruebas de registro y validación de incidencias aprobadas. |
-| HU-06 | Hecha | Pruebas de consulta de incidencias mediante API aprobadas. |
-| HU-07 | Pendiente | Pruebas automatizadas del adaptador OpenAI aprobadas; falta verificar una clasificación real exitosa con el proveedor. |
-| HU-08 | Hecha | Pruebas de confirmación y corrección humana de categorías aprobadas. |
+| HU-04 | Hecha | Pruebas de consulta mediante API y Livewire aprobadas. |
+| HU-05 | Hecha | Pruebas de registro de incidencias aprobadas. |
+| HU-06 | Hecha | Pruebas de consulta de incidencias aprobadas. |
+| HU-07 | Pendiente | Adaptador y pruebas automatizadas aprobadas; falta verificar una clasificación real exitosa mediante OpenAI API. |
+| HU-08 | Hecha | Pruebas de confirmación y corrección humana aprobadas. |
+| HU-09 | Pendiente | Registro de mantenimientos todavía no implementado. |
+| HU-10 | Pendiente | Consulta del historial de mantenimientos todavía no implementada. |
+| HU-11 | Pendiente | Clasificación preventiva y correctiva todavía no implementada. |
+| HU-12 | Pendiente | Asociación con incidencias todavía no implementada. |
 
-### Observaciones de calidad
+### Resumen del avance funcional
 
-La ejecución evidencia un funcionamiento satisfactorio de los componentes evaluados mediante pruebas automatizadas.
+- **Total de historias de usuario:** 12.
+- **Historias completadas:** 7.
+- **Historias pendientes:** 5.
+- **Historias del módulo de mantenimientos:** 4.
+- **Historias de mantenimiento implementadas:** 0.
 
-Se comprobaron las reglas de negocio relacionadas con el inventario, la protección de operaciones mediante roles y la persistencia de información.
+**Porcentaje de historias completadas:** 58,3 %.
 
-También se verificaron mecanismos de tratamiento de errores de la API y de conservación de las decisiones humanas en la clasificación de incidencias.
-
-La clasificación asistida mediante inteligencia artificial dispone de pruebas automatizadas satisfactorias. Sin embargo, estas no acreditan por sí solas una conexión real exitosa con OpenAI API.
-
-Los requisitos no funcionales relacionados con rendimiento, disponibilidad y usabilidad conservan el estado Pendiente hasta ejecutar sus verificaciones específicas.
+Este porcentaje corresponde a la cantidad de historias marcadas como terminadas respecto al total documentado. No representa una medición del avance global del software ni considera las diferencias de esfuerzo entre historias.
 
 ---
 
-## Criterio de cierre del MVP
+## 10. Observaciones de calidad
 
-El prototipo se considerará preparado para su presentación cuando las funcionalidades declaradas como terminadas dispongan de evidencias verificables, se hayan ejecutado las pruebas pertinentes y las limitaciones identificadas estén documentadas.
+La ejecución de pruebas automatizadas evidencia un funcionamiento satisfactorio de los componentes evaluados.
 
-Se priorizará la consolidación de autenticación, autorización, inventario, incidencias, persistencia de datos y clasificación asistida por IA.
+Se comprobaron reglas de negocio relacionadas con autenticación, autorización, inventario, incidencias y persistencia.
 
-No se incorporarán nuevas funcionalidades que comprometan el plazo de presentación.
+También se verificaron mecanismos de tratamiento de errores de la API y conservación de decisiones humanas en la clasificación de incidencias.
 
-La integración de inteligencia artificial se presentará según el estado realmente comprobado, diferenciando las pruebas automatizadas simuladas de las solicitudes reales al proveedor.
+La clasificación asistida mediante inteligencia artificial dispone de pruebas automatizadas satisfactorias, pero todavía no existe evidencia suficiente de una clasificación real exitosa con OpenAI API.
+
+El módulo de mantenimientos se encuentra en fase de análisis y definición de requisitos.
+
+Las historias HU-09, HU-10, HU-11 y HU-12 todavía no cuentan con implementación ni pruebas automatizadas específicas.
+
+Se deberán establecer casos de prueba positivos y negativos para cada una de estas historias antes de marcarlas como terminadas.
+
+---
+
+## 11. Trazabilidad con GitHub Projects
+
+Las historias de usuario se gestionan mediante Issues vinculados al tablero Kanban del proyecto.
+
+El flujo de trabajo comprende cinco estados:
+
+1. Backlog.
+2. Ready.
+3. In Progress.
+4. In Review.
+5. Done.
+
+### Distribución objetivo del tablero
+
+**Done**
+
+- HU-01: Autenticación de usuarios.
+- HU-02: Control de acceso basado en roles.
+- HU-03: Registro de cámaras de seguridad.
+- HU-04: Consulta del inventario de cámaras.
+- HU-05: Registro de incidencias.
+- HU-06: Consulta de incidencias.
+- HU-08: Validación humana de la clasificación.
+
+**In Review**
+
+- HU-07: Clasificación asistida por inteligencia artificial.
+
+**Backlog**
+
+- HU-09: Registro de mantenimientos de cámaras.
+- HU-10: Consulta del historial de mantenimientos.
+- HU-11: Clasificación de mantenimientos preventivos y correctivos.
+- HU-12: Asociación de mantenimientos con incidencias.
+
+Las historias HU-09 a HU-12 deberán crearse como nuevos Issues y vincularse al tablero GitHub Projects.
+
+Su presencia en este documento no acredita que ya hayan sido creadas en GitHub.
+
+---
+
+## 12. Plan de implementación del módulo de mantenimientos
+
+La implementación se organizará por historias, evitando introducir funcionalidades adicionales.
+
+### Fase 1: Análisis y diseño
+
+- Confirmar las reglas de negocio.
+- Identificar los campos obligatorios.
+- Establecer los roles y permisos.
+- Diseñar las relaciones entre cámaras, incidencias y mantenimientos.
+- Definir los criterios de prueba.
+
+### Fase 2: Registro y clasificación
+
+**Historias:** HU-09 y HU-11.
+
+- Incorporar la persistencia de mantenimientos.
+- Implementar el registro de intervenciones.
+- Incorporar los tipos preventivo y correctivo.
+- Aplicar validaciones de datos.
+- Ejecutar pruebas automatizadas.
+
+### Fase 3: Consulta del historial
+
+**Historia:** HU-10.
+
+- Consultar los registros asociados a una cámara.
+- Presentar los datos principales de las intervenciones.
+- Informar cuando no existan mantenimientos registrados.
+- Verificar los permisos de consulta.
+
+### Fase 4: Asociación con incidencias
+
+**Historia:** HU-12.
+
+- Relacionar mantenimientos con incidencias existentes.
+- Validar la correspondencia entre incidencia y cámara.
+- Permitir la consulta de la relación.
+- Ejecutar pruebas de integridad y autorización.
+
+### Fase 5: Verificación y cierre
+
+- Ejecutar las pruebas específicas del módulo.
+- Ejecutar nuevamente la suite de regresión del sistema.
+- Documentar los resultados.
+- Actualizar los estados de los Issues.
+- Consolidar las evidencias de funcionamiento.
+- Actualizar el documento de requisitos.
+
+Las fases representan una propuesta de planificación, no actividades ya ejecutadas.
+
+---
+
+## 13. Criterios de cierre del módulo de mantenimientos
+
+El módulo se considerará terminado cuando:
+
+1. Los criterios de aceptación de HU-09, HU-10, HU-11 y HU-12 estén implementados.
+2. Las operaciones respeten los permisos institucionales definidos.
+3. Los datos registrados persistan correctamente en SQLite.
+4. Las relaciones entre cámaras, incidencias y mantenimientos mantengan su integridad.
+5. Las validaciones impidan almacenar información inválida.
+6. Las pruebas automatizadas específicas del módulo se ejecuten satisfactoriamente.
+7. La incorporación del módulo no genere regresiones en las funcionalidades existentes.
+8. Las historias estén documentadas con evidencias y actualizadas en GitHub Projects.
+
+La aprobación de estos criterios permitirá mover las historias correspondientes a la columna Done.
+
+---
+
+## 14. Criterio de cierre del MVP
+
+El prototipo estará preparado para su presentación cuando las funcionalidades declaradas como terminadas dispongan de evidencias verificables, se hayan ejecutado las pruebas correspondientes y las limitaciones identificadas estén documentadas.
+
+Se prioriza la consolidación de autenticación, autorización, inventario, incidencias, persistencia y clasificación asistida mediante IA.
+
+La ampliación correspondiente al módulo de mantenimientos se desarrollará de manera controlada, procurando conservar la estabilidad de los componentes ya implementados.
+
+Las historias HU-09, HU-10, HU-11 y HU-12 no deberán presentarse como funcionalidades terminadas hasta cumplir sus criterios de aceptación y las pruebas correspondientes.
+
+La integración de inteligencia artificial se presentará según su funcionamiento realmente comprobado, diferenciando las pruebas automatizadas de las solicitudes reales al proveedor.
+
+La documentación, los Issues y el tablero Kanban deberán reflejar el estado real del sistema durante cada iteración del proyecto.
+
+---
+
+## 15. Control de cambios del documento
+
+| Versión | Descripción | Estado |
+|---|---|---|
+| 1.0 | Especificación inicial de HU-01 a HU-08 y cuatro requisitos no funcionales. | Documentada. |
+| 1.1 | Corrección de los requisitos de disponibilidad y usabilidad. | Incorporada. |
+| 1.2 | Actualización de estados a partir de 129 pruebas automatizadas aprobadas. | Documentada. |
+| 1.3 | Ampliación del backlog con HU-09 a HU-12 para el módulo de mantenimientos. | Propuesta para commit. |
+
+**Documento:** `docs/requisitos.md`
+
+**Repositorio:** `jecaicedotoro-source/gestion-mantenimiento-camaras`
+
+**Rama de referencia:** `codex/consolidacion-mvp-usc`
+
+**Commit propuesto:** `docs: ampliar requisitos del modulo de mantenimientos`
