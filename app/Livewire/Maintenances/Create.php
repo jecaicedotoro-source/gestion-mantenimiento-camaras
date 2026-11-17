@@ -39,7 +39,7 @@ class Create extends Component
     {
         $this->maintenanceDate = now()->toDateString();
 
-        $this->responsible = Auth::user()?->name ?? '';
+        $this->responsible = Auth::user()->name;
     }
 
     /**

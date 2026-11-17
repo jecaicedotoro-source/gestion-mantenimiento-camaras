@@ -12,7 +12,7 @@ final class MaintenanceRegistrationService
     /**
      * Valida y registra un mantenimiento.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function register(array $data): Maintenance
     {

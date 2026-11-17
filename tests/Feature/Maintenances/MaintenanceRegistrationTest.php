@@ -13,8 +13,8 @@ uses(RefreshDatabase::class);
 function hu09CreateCamera(string $suffix = '001'): Camera
 {
     return Camera::create([
-        'codigo_inventario' => 'CAM-HU09-' . $suffix,
-        'numero_serie' => 'SN-HU09-' . $suffix,
+        'codigo_inventario' => 'CAM-HU09-'.$suffix,
+        'numero_serie' => 'SN-HU09-'.$suffix,
         'marca' => 'Hikvision',
         'modelo' => 'DS-2CD',
         'tipo' => 'IP',

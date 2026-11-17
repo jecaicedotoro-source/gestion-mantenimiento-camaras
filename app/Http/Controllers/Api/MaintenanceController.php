@@ -14,8 +14,6 @@ class MaintenanceController extends Controller
      *
      * La autorización se aplica mediante el middleware
      * can:create-maintenances definido en routes/api.php.
-     *
-     * @return JsonResponse
      */
     public function store(
         Request $request,

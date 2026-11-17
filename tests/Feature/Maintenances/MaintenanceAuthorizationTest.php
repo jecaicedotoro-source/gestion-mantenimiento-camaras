@@ -72,7 +72,6 @@ test('HU-09 usuario sin rol no puede registrar mantenimientos', function () {
     )->toBeTrue();
 });
 
-
 test('HU-09 usuario inactivo no puede registrar mantenimientos', function () {
     $user = hu09CreateUserWithRole('administrador');
 
