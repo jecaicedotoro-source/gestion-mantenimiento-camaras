@@ -1,12 +1,14 @@
 <?php
 
+use Illuminate\Contracts\Console\Kernel;
+
 // Verifica el aislamiento antes de que Pest pueda aplicar RefreshDatabase.
 // Solo muestra valores esperados o booleanos; nunca imprime la configuración privada.
 try {
     $project = $argv[1] ?? dirname(__DIR__, 2);
     require $project.'/vendor/autoload.php';
     $app = require $project.'/bootstrap/app.php';
-    $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    $app->make(Kernel::class)->bootstrap();
     $checks = [
         'environment_testing' => $app->environment('testing'),
         'connection_sqlite' => config('database.default') === 'sqlite',
