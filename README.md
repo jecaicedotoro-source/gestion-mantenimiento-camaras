@@ -140,6 +140,26 @@ Referencias de implementación: [Responses API](https://developers.openai.com/ap
 
 ## Pruebas y ejecución reproducible
 
+### Ejecución de los cinco casos de la matriz — 7 de noviembre de 2026
+
+Se inspeccionó `Planificacion_Ejecucion_Cinco_Casos_Camaras.xlsx` y se añadieron los cinco casos exactos en `tests/Feature/Api/CameraExecutionPlanTest.php`: alta/consulta/persistencia, código vacío, código repetido permitido, serie duplicada rechazada y serie JSON nula. Usan datos sintéticos, token Sanctum efímero real y SQLite en memoria. CP-03/04 recrean su precondición CP-01 para no depender del orden.
+
+Resultado local de esta revisión, sobre `78f38eb` más las nuevas pruebas: **5/5 aprobados, 128 aserciones**. Suite completa: **129 aprobados, 2 omitidos, 601 aserciones**, sin fallos ni errores. Las omisiones corresponden al registro público deshabilitado. Pint pasó sobre el archivo nuevo. La cobertura de criterios es 5/5; no se midió cobertura de líneas/ramas.
+
+Los mismos cinco casos también aprobaron mediante **10 solicitudes HTTP reales y 16 aserciones** contra un servidor temporal del código nuevo en `127.0.0.1:8017`, con SQLite y token QA propios: 201/200 para altas/consultas, 422 para código vacío/serie duplicada y NULL verificado por PDO. No había instancia accesible en 8000/8001. El servidor temporal se detuvo al terminar; las bases reales nueva y antigua conservaron sus SHA-256.
+
+Para repetir sin heredar la base ni las claves del `.env`, utilizar el lanzador aislado:
+
+```powershell
+./docs/qa/ejecutar-pest-aislado.ps1 -Scope plan
+./docs/qa/ejecutar-pest-aislado.ps1 -Scope full
+# Si PHP no está disponible en PATH, añadir -PhpPath con la ruta del ejecutable.
+```
+
+El lanzador verifica el aislamiento antes de `RefreshDatabase`, desactiva OpenAI, utiliza SQLite `:memory:`, separa cachés/vistas y restaura las variables del proceso al terminar. Conserva JUnit, preflight, comando y salida depurada en la carpeta que indica; acepta `-EvidenceDirectory`. Se verificó realmente con los cinco casos: **5 aprobados / 128 aserciones**, exit 0. En Windows reutiliza `phpunit.windows.xml` si existe; en otro caso usa `phpunit.xml`. No instala dependencias ni limpia cachés de la instancia.
+
+La regresión complementaria de incidencias/OpenAI aprobó **32 pruebas / 144 aserciones** con dobles y HTTP simulado. Separadamente, una llamada **real** al adaptador OpenAI respondió HTTP 200 con categoría `imagen`, modelo configurado `gpt-5.4-nano`, 141 tokens de entrada y 47 de salida. Solo se envió texto sintético; no se escribieron incidencias reales. Una muestra valida conectividad y contrato, no precisión general ni costo facturado. Los resultados, comandos, limitaciones y evidencias depuradas están en [el informe de esta ejecución](docs/evidencias/2026-11-07-cinco-casos/Informe_ejecucion.md).
+
 Pruebas con Pest 5 sobre PHPUnit 13 y SQLite en memoria, sin llamadas externas de IA. Ejecutar:
 
 ```powershell
