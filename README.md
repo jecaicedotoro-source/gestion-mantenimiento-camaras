@@ -1,5 +1,7 @@
 # Gestión del inventario y mantenimiento de cámaras — USC
 
+[![CI](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/workflows/tests.yml/badge.svg?branch=codex%2Fconsolidacion-mvp-usc)](https://github.com/jecaicedotoro-source/gestion-mantenimiento-camaras/actions/workflows/tests.yml)
+
 Sistema web para la Ciudadela Pampalinda de la Universidad Santiago de Cali. Este repositorio continúa el MVP existente; su alcance prioritario es **CU-01: registrar una cámara de seguridad**. La clasificación asistida de incidencias es una funcionalidad complementaria que requiere decisión humana.
 
 ## Objetivos

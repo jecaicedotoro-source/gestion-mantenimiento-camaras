@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - codex/consolidacion-mvp-usc
   pull_request:
 
 permissions:
