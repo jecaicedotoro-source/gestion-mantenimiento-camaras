@@ -19,8 +19,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // El dominio conoce el contrato; el adaptador HTTP pertenece a infraestructura.
-        $this->app->bind(IClasificadorIncidencias::class, OpenAIIncidentClassifier::class);
+        // El dominio conoce el contrato; el adaptador HTTP
+        // pertenece a infraestructura.
+        $this->app->bind(
+            IClasificadorIncidencias::class,
+            OpenAIIncidentClassifier::class
+        );
     }
 
     /**
@@ -32,34 +36,71 @@ class AppServiceProvider extends ServiceProvider
 
         /*
          * Permiso para administrar usuarios.
-         * Exclusivo del administrador.
+         *
+         * Exclusivo del administrador activo.
          */
         Gate::define('manage-users', function (User $user): bool {
-            return $user->is_active && $user->role?->code === 'administrador';
+            return $user->is_active
+                && $user->role?->code === 'administrador';
         });
 
         /*
          * Permiso para consultar el inventario de cámaras.
+         *
          * Disponible para los cuatro roles institucionales.
          */
         Gate::define('view-cameras', function (User $user): bool {
-            return $user->is_active && in_array($user->role?->code, [
-                'administrador',
-                'coordinador',
-                'tecnico',
-                'auxiliar',
-            ], true);
+            return $user->is_active && in_array(
+                $user->role?->code,
+                [
+                    'administrador',
+                    'coordinador',
+                    'tecnico',
+                    'auxiliar',
+                ],
+                true
+            );
         });
 
         /*
          * Permiso para registrar cámaras de seguridad.
+         *
          * Disponible para administradores y coordinadores.
          */
         Gate::define('create-cameras', function (User $user): bool {
-            return $user->is_active && in_array($user->role?->code, [
-                'administrador',
-                'coordinador',
-            ], true);
+            return $user->is_active && in_array(
+                $user->role?->code,
+                [
+                    'administrador',
+                    'coordinador',
+                ],
+                true
+            );
+        });
+
+        /*
+         * HU-09: Permiso para registrar mantenimientos.
+         *
+         * Roles autorizados:
+         * - Administrador
+         * - Coordinador
+         * - Técnico
+         *
+         * Acceso denegado:
+         * - Auxiliar
+         * - Usuario sin rol
+         * - Usuario inactivo
+         */
+        Gate::define('create-maintenances', function (User $user): bool {
+            return $user->is_active && in_array(
+                $user->role?->code,
+                [
+                    'administrador',
+                    'coordinador',
+                    'tecnico',
+                ],
+                true
+            );
         });
     }
 
