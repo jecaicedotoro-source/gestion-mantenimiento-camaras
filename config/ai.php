@@ -2,6 +2,7 @@
 
 // La integración queda deshabilitada hasta configurar una clave y un modelo compatibles.
 return [
+    'provider' => env('AI_PROVIDER', 'openai'),
     'enabled' => env('OPENAI_ENABLED', false),
     'key' => env('OPENAI_API_KEY', ''),
     'model' => env('OPENAI_MODEL', ''),

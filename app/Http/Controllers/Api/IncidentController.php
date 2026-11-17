@@ -42,7 +42,7 @@ final class IncidentController extends Controller
         return response()->json(['data' => [
             'description' => $text,
             'approved_input_hash' => hash('sha256', $text),
-            'notice' => 'Revisa el texto y elimina datos sensibles antes de autorizar la solicitud a OpenAI.',
+            'notice' => 'Revisa el texto y elimina datos sensibles antes de autorizar la solicitud a '.(config('ai.provider', 'openai') === 'groq' ? 'Groq' : 'OpenAI').'.',
         ]]);
     }
 

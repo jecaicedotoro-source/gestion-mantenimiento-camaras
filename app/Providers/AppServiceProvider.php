@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\IClasificadorIncidencias;
+use App\Infrastructure\AI\GroqIncidentClassifier;
 use App\Infrastructure\AI\OpenAIIncidentClassifier;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -23,7 +24,13 @@ class AppServiceProvider extends ServiceProvider
         // pertenece a infraestructura.
         $this->app->bind(
             IClasificadorIncidencias::class,
-            OpenAIIncidentClassifier::class
+            function (): IClasificadorIncidencias {
+                return match (config('ai.provider', 'openai')) {
+                    'openai' => new OpenAIIncidentClassifier,
+                    'groq' => new GroqIncidentClassifier,
+                    default => throw new \LogicException('Proveedor IA no admitido.'),
+                };
+            }
         );
     }
 

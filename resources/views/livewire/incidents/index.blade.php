@@ -33,7 +33,7 @@
         <section aria-labelledby="review-heading" class="space-y-4 rounded-2xl border border-indigo-300 bg-indigo-50 p-5 dark:border-indigo-800 dark:bg-indigo-950">
             <h2 id="review-heading" class="text-lg font-semibold">Revisión de incidencia #{{ $selectedIncidentId }}</h2>
             @if ($previewHash !== '')
-                <p class="text-sm">Solo se enviará el siguiente texto a OpenAI. Revisa que no contenga información sensible; la minimización automática puede ser incompleta.</p>
+                <p class="text-sm">Solo se enviará el siguiente texto a {{ config('ai.provider', 'openai') === 'groq' ? 'Groq' : 'OpenAI' }}. Revisa que no contenga información sensible; la minimización automática puede ser incompleta.</p>
                 <pre class="whitespace-pre-wrap break-words rounded-lg bg-white p-4 text-sm dark:bg-zinc-900">{{ $previewText }}</pre>
                 <flux:checkbox wire:model="shareApproved" label="He revisado el texto y autorizo esta solicitud de clasificación." />
                 <flux:button variant="primary" wire:click="classify" wire:loading.attr="disabled" wire:target="classify">Clasificar con IA</flux:button>
