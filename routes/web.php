@@ -3,6 +3,7 @@
 use App\Livewire\Dashboard;
 use App\Livewire\Incidents\Index;
 use App\Livewire\Maintenances\Create as MaintenanceCreate;
+use App\Livewire\Maintenances\History as MaintenanceHistory;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -68,6 +69,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('mantenimientos/crear', MaintenanceCreate::class)
         ->middleware('can:create-maintenances')
         ->name('maintenances.create');
+
+    // HU-10: consulta de historial de una cámara, incluida su baja lógica.
+    Route::get('cameras/{camera}/mantenimientos', MaintenanceHistory::class)
+        ->whereNumber('camera')
+        ->middleware('can:view-cameras')
+        ->name('maintenances.history');
 
     /*
     |--------------------------------------------------------------------------

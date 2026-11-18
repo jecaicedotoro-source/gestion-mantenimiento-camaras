@@ -85,9 +85,7 @@ new class extends Component {
                     <th class="p-3">Modelo</th>
                     <th class="p-3">Ubicación</th>
                     <th class="p-3">Estado</th>
-                    @can('delete', \App\Models\Camera::class)
-                        <th class="p-3">Acciones</th>
-                    @endcan
+                    <th class="p-3">Acciones</th>
                 </tr>
             </thead>
 
@@ -100,19 +98,22 @@ new class extends Component {
                         <td class="p-3">{{ $camera->modelo }}</td>
                         <td class="p-3">{{ $camera->ubicacion }}</td>
                         <td class="p-3"><span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $camera->estado === 'activo' ? 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200' : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200' }}">{{ __($camera->estado) }}</span></td>
-                        @can('delete', \App\Models\Camera::class)
-                            <td class="p-3">
-                                <flux:button size="sm" variant="danger" wire:click="retireCamera({{ $camera->id }})"
+                        <td class="p-3">
+                            <div class="flex flex-wrap gap-2">
+                                <flux:button size="sm" :href="route('maintenances.history', ['camera' => $camera->id])" wire:navigate>Ver historial</flux:button>
+                                @can('delete', \App\Models\Camera::class)
+                                    <flux:button size="sm" variant="danger" wire:click="retireCamera({{ $camera->id }})"
                                     wire:confirm="¿Dar de baja esta cámara? Saldrá del inventario y sus incidencias se conservarán."
                                     wire:loading.attr="disabled" wire:target="retireCamera({{ $camera->id }})">
                                     Dar de baja
-                                </flux:button>
-                            </td>
-                        @endcan
+                                    </flux:button>
+                                @endcan
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ Gate::allows('delete', \App\Models\Camera::class) ? 7 : 6 }}" class="p-6 text-center">
+                        <td colspan="7" class="p-6 text-center">
                             No se encontraron cámaras.
                         </td>
                     </tr>
