@@ -22,7 +22,7 @@ La especificación inicial comprendía ocho historias de usuario relacionadas co
 
 Posteriormente, se amplió el backlog con cuatro historias correspondientes al módulo de mantenimientos, agrupadas en la épica EP-03.
 
-La ampliación EP-03 se encuentra en ejecución: HU-09, HU-10 y HU-11 están implementadas en el código del prototipo; HU-12 continúa pendiente. La publicación conjunta en Railway queda para el cierre de EP-03.
+La ampliación EP-03 se encuentra en ejecución: HU-09, HU-10 y HU-11 están implementadas en el código del prototipo; HU-12 está en implementación y validación. La publicación conjunta en Railway queda para el cierre de EP-03.
 
 ---
 
@@ -539,9 +539,9 @@ Como usuario autorizado, quiero identificar cada mantenimiento como preventivo o
 
 **Prioridad:** Alta (P0).
 
-**Estado:** Implementada, a la espera de la validación de CI y del entorno local.
+**Estado:** Implementada, fusionada mediante PR #22 y validada localmente (10 pruebas, 40 aserciones).
 
-**Evidencia:** `tests/Feature/Maintenances/MaintenanceTypeClassificationTest.php` verifica los tres criterios de aceptación, la persistencia mediante el servicio, el formulario Livewire, API y visualización en HU-10. La CI y comprobación local se registrarán al completarse.
+**Evidencia:** `tests/Feature/Maintenances/MaintenanceTypeClassificationTest.php` verifica los tres criterios de aceptación, la persistencia mediante el servicio, el formulario Livewire, API y visualización en HU-10. GitHub Actions aprobada (205 pruebas, 823 aserciones); comprobación local del selector Preventivo/Correctivo y pruebas correctas.
 
 **Ubicación Kanban:** En progreso hasta completar CI y verificación local.
 
@@ -577,22 +577,38 @@ Como usuario autorizado, quiero asociar un mantenimiento con una incidencia regi
 - **Cuando** el usuario autorizado consulta la intervención.
 - **Entonces** el sistema permite identificar la incidencia relacionada.
 
-**Reglas de negocio propuestas**
+**CA-12.4: Actualización explícita del estado técnico**
 
-- La incidencia relacionada debe existir previamente.
-- La incidencia asociada debe pertenecer a la misma cámara del mantenimiento.
-- La asociación debe persistir en SQLite.
-- Los permisos de asociación deben definirse antes de implementar.
-- La asociación será opcional, puesto que no todos los mantenimientos estarán relacionados con una incidencia.
-- Los mantenimientos preventivos podrán registrarse sin incidencia asociada.
+- **Dado** que se registra una intervención correctiva asociada a una incidencia pendiente.
+- **Cuando** el usuario confirma que solucionó el fallo.
+- **Entonces** la incidencia pasa a estado técnico «corregida», registrando fecha y responsable, sin modificar `review_status` de la clasificación.
+
+**CA-12.5: Intervención sin corrección y múltiples intentos**
+
+- **Dado** que un mantenimiento correctivo no soluciona la incidencia.
+- **Cuando** el usuario indica expresamente que no quedó corregida.
+- **Entonces** se registra la intervención, se mantiene pendiente la incidencia y se pueden registrar intervenciones posteriores.
+
+**Reglas de negocio**
+
+- Se admite asociación **opcional** solo en mantenimientos de tipo correctivo; el preventivo permanece independiente.
+- La incidencia asociada debe existir y pertenecer a la misma cámara activa.
+- Desde la vista de incidencias se ofrece «Registrar mantenimiento correctivo» con la cámara, incidencia y tipo precargados.
+- El responsable declara explícitamente «Sí» o «No» acerca de si solucionó el fallo. No se infiere del texto de resultado.
+- El estado técnico `incidents.technical_status` es independiente de `incidents.review_status`, reservado a la categorización humana/IA.
+- Una respuesta «No» mantiene el estado pendiente y permite múltiples intervenciones vinculadas.
+- Una respuesta «Sí» registra en una transacción el mantenimiento, `resolved_by` y `resolved_at` y deja la incidencia corregida.
+- Solo administrador, coordinador y técnico activos pueden registrar mantenimiento; otros roles pueden consultar incidencias e historial según permisos existentes.
+- Ningún componente de IA participa en reparaciones, mantenimientos ni cambios de estado técnico.
+- La persistencia sigue en la misma base SQLite. Las migraciones de HU-12 son aditivas y conservan todos los registros existentes.
 
 **Prioridad:** Alta (P0).
 
-**Estado:** Pendiente.
+**Estado:** Implementada en rama `feature/hu-12-mantenimientos-incidencias`, pendiente de integración, CI y validación local.
 
-**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+**Evidencia:** `tests/Feature/Maintenances/MaintenanceIncidentLinkTest.php`, migración `2026_11_18_130000_link_maintenances_to_incidents.php`; pruebas de integración y estado técnico.
 
-**Ubicación Kanban:** Backlog.
+**Ubicación Kanban:** En progreso, hasta superar CI y verificación local.
 
 ---
 
