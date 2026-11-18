@@ -22,7 +22,7 @@ La especificación inicial comprendía ocho historias de usuario relacionadas co
 
 Posteriormente, se amplió el backlog con cuatro historias correspondientes al módulo de mantenimientos, agrupadas en la épica EP-03.
 
-Esta ampliación se encuentra en fase de análisis y planificación. No debe confundirse con funcionalidades ya implementadas.
+La ampliación EP-03 se encuentra en ejecución: HU-09, HU-10 y HU-11 están implementadas en el código del prototipo; HU-12 continúa pendiente. La publicación conjunta en Railway queda para el cierre de EP-03.
 
 ---
 
@@ -388,7 +388,7 @@ Como usuario autorizado, quiero revisar y confirmar la categoría de una inciden
 
 **Tipo:** Épica funcional.
 
-**Estado:** Propuesta de implementación.
+**Estado:** En ejecución; HU-09, HU-10 y HU-11 implementadas y HU-12 pendiente.
 
 **Objetivo**
 
@@ -401,7 +401,7 @@ Incorporar funcionalidades que permitan registrar, clasificar y consultar interv
 - HU-11: Clasificación de mantenimientos preventivos y correctivos.
 - HU-12: Asociación de mantenimientos con incidencias.
 
-Las cuatro historias representan una ampliación del backlog y permanecerán pendientes hasta completar su implementación y verificación.
+Las cuatro historias representan una ampliación del backlog. HU-09, HU-10 y HU-11 están implementadas y cuentan con pruebas; HU-12 deberá integrar incidencias y mantenimientos correctivos mediante un estado técnico independiente de la clasificación IA.
 
 ---
 
@@ -451,11 +451,11 @@ Como usuario autorizado, quiero registrar las intervenciones de mantenimiento re
 
 **Prioridad:** Alta (P0).
 
-**Estado:** Pendiente.
+**Estado:** Implementada y validada localmente.
 
-**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+**Evidencia:** `tests/Feature/Maintenances/MaintenanceRegistrationTest.php`, `MaintenanceLivewireTest.php`, `MaintenanceApiTest.php` y `MaintenanceAuthorizationTest.php`.
 
-**Ubicación Kanban:** Backlog.
+**Ubicación Kanban:** Completada (GitHub Issue #10).
 
 ---
 
@@ -495,11 +495,11 @@ Como usuario autorizado, quiero consultar el historial de mantenimientos de una 
 
 **Prioridad:** Alta (P0).
 
-**Estado:** Pendiente.
+**Estado:** Implementada y validada localmente (18/11/2026).
 
-**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+**Evidencia:** `tests/Feature/Maintenances/MaintenanceHistoryTest.php`: 12 pruebas aprobadas, 43 aserciones. Integrada mediante PR #21 y comprobada en la interfaz local.
 
-**Ubicación Kanban:** Backlog.
+**Ubicación Kanban:** Completada (GitHub Issue #11).
 
 ---
 
@@ -539,15 +539,15 @@ Como usuario autorizado, quiero identificar cada mantenimiento como preventivo o
 
 **Prioridad:** Alta (P0).
 
-**Estado:** Pendiente.
+**Estado:** Implementada, a la espera de la validación de CI y del entorno local.
 
-**Evidencia:** Funcionalidad todavía no implementada ni verificada.
+**Evidencia:** `tests/Feature/Maintenances/MaintenanceTypeClassificationTest.php` verifica los tres criterios de aceptación, la persistencia mediante el servicio, el formulario Livewire, API y visualización en HU-10. La CI y comprobación local se registrarán al completarse.
 
-**Ubicación Kanban:** Backlog.
+**Ubicación Kanban:** En progreso hasta completar CI y verificación local.
 
 **Observación técnica**
 
-HU-11 complementa funcionalmente a HU-09. No se requiere una pantalla independiente para clasificar los mantenimientos; la selección del tipo podrá realizarse dentro del formulario de registro.
+HU-11 complementa funcionalmente a HU-09. No se requiere una pantalla independiente para clasificar los mantenimientos; la selección del tipo se realiza en el formulario de registro existente.
 
 ---
 
