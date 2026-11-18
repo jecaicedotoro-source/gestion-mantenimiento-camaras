@@ -82,7 +82,7 @@ final class MaintenanceRegistrationService
             $incident = null;
 
             if ($incidentId !== null) {
-                $incident = Incident::query()->lockForUpdate()->findOrFail($incidentId);
+                $incident = Incident::query()->lockForUpdate()->findOrFail((int) $incidentId);
 
                 if ($incident->camera_id !== (int) $validated['camera_id']) {
                     throw ValidationException::withMessages([
