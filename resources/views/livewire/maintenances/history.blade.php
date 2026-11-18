@@ -30,6 +30,16 @@
                     <p class="text-sm font-semibold">Descripción de la intervención</p>
                     <p class="whitespace-pre-wrap break-words text-sm">{{ $maintenance->description }}</p>
                 </div>
+                @if ($maintenance->incident_id)
+                    <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm dark:border-indigo-800 dark:bg-indigo-950">
+                        <p><strong>Incidencia relacionada:</strong> #{{ $maintenance->incident_id }}</p>
+                        <p class="mt-1 whitespace-pre-wrap break-words">{{ $maintenance->incident?->description }}</p>
+                        <p class="mt-1 font-medium">
+                            {{ $maintenance->repair_resolved ? 'Reparación confirmada en esta intervención' : 'La reparación no se confirmó en esta intervención' }}
+                        </p>
+                        <a class="mt-2 inline-block text-indigo-700 underline dark:text-indigo-200" href="{{ route('incidents.index') }}" wire:navigate>Consultar incidencias</a>
+                    </div>
+                @endif
                 <div>
                     <p class="text-sm font-semibold">Resultado</p>
                     <p class="whitespace-pre-wrap break-words text-sm">{{ $maintenance->result }}</p>
