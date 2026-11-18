@@ -37,6 +37,7 @@ class History extends Component
         return view('livewire.maintenances.history', [
             'camera' => $camera,
             'maintenances' => $camera->maintenances()
+                ->with('incident')
                 ->orderByDesc('maintenance_date')
                 ->orderByDesc('id')
                 ->paginate(10),
