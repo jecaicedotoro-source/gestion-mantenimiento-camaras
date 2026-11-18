@@ -16,6 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // También se ejecuta en las solicitudes Livewire y el desafío de segundo factor.
+        // Railway termina HTTPS en su proxy: confiar en el protocolo reenviado evita
+        // generar URLs HTTP para los recursos y peticiones de Livewire.
+        // No confiar en X-Forwarded-Host para evitar suplantacion del host.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_PORT,
+        );
         $middleware->web(append: [EnsureUserIsActive::class]);
         $middleware->alias(['active' => EnsureUserIsActive::class]);
     })
