@@ -3,7 +3,6 @@
 use App\Livewire\Maintenances\Create;
 use App\Models\Camera;
 use App\Models\Incident;
-use App\Models\Maintenance;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\MaintenanceRegistrationService;
