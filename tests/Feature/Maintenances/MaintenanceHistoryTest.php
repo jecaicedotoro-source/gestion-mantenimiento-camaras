@@ -73,8 +73,10 @@ test('HU-10 bloquea cuentas sin rol e inactivas, también en Livewire', function
 
     $this->actingAs(hu10Actor('coordinador', false));
 
+    // El middleware de cuentas desactivadas termina la sesión y redirige,
+    // antes de evaluar la autorización de lectura del historial.
     $this->get(route('maintenances.history', ['camera' => $camera->id]))
-        ->assertForbidden();
+        ->assertRedirect();
 });
 
 test('HU-10 aísla los registros por cámara y ordena del más reciente al más antiguo', function () {
