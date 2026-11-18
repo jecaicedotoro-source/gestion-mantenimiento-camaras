@@ -70,6 +70,12 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('can:create-maintenances')
         ->name('maintenances.create');
 
+    // HU-12: registro correctivo precargado desde la incidencia seleccionada.
+    Route::get('incidents/{incident}/mantenimiento-correctivo', MaintenanceCreate::class)
+        ->whereNumber('incident')
+        ->middleware('can:create-maintenances')
+        ->name('maintenances.create-for-incident');
+
     // HU-10: consulta de historial de una cámara, incluida su baja lógica.
     Route::get('cameras/{camera}/mantenimientos', MaintenanceHistory::class)
         ->whereNumber('camera')
