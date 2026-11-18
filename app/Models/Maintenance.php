@@ -9,6 +9,8 @@ class Maintenance extends Model
 {
     protected $fillable = [
         'camera_id',
+        'incident_id',
+        'repair_resolved',
         'maintenance_date',
         'type',
         'description',
@@ -20,7 +22,14 @@ class Maintenance extends Model
     {
         return [
             'maintenance_date' => 'date',
+            'repair_resolved' => 'boolean',
         ];
+    }
+
+    /** @return BelongsTo<Incident, $this> */
+    public function incident(): BelongsTo
+    {
+        return $this->belongsTo(Incident::class);
     }
 
     /**

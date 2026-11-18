@@ -140,7 +140,7 @@ class Index extends Component
     public function render(): View
     {
         return view('livewire.incidents.index', [
-            'incidents' => Incident::with(['camera', 'reviewer', 'classifications' => fn ($query) => $query->latest('id')])->latest()->paginate(10),
+            'incidents' => Incident::with(['camera', 'reviewer', 'repairResolver', 'classifications' => fn ($query) => $query->latest('id')])->withCount('maintenances')->latest()->paginate(10),
             'cameras' => Camera::query()->orderBy('codigo_inventario')->get(['id', 'codigo_inventario', 'ubicacion']),
             'categories' => IncidentCategory::cases(),
         ])->layout('layouts::app', ['title' => 'Incidencias técnicas']);

@@ -62,9 +62,25 @@
             <article wire:key="incident-{{ $incident->id }}" class="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <h2 class="font-semibold">Incidencia #{{ $incident->id }} · Cámara #{{ $incident->camera_id }} · {{ $incident->camera->codigo_inventario }}</h2>
-                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-950 dark:bg-amber-950 dark:text-amber-100">{{ ucfirst($incident->review_status) }}</span>
+                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-950 dark:bg-amber-950 dark:text-amber-100">Clasificación: {{ ucfirst($incident->review_status) }}</span>
                 </div>
                 <p class="whitespace-pre-wrap break-words text-sm">{{ $incident->description }}</p>
+                <div class="flex flex-wrap items-center gap-3 text-sm">
+                    <span class="rounded-full px-3 py-1 font-medium {{ $incident->technical_status === 'corregida' ? 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-100' : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100' }}">
+                        Estado técnico: {{ $incident->technical_status === 'corregida' ? 'Corregida' : 'Pendiente de corrección' }}
+                    </span>
+                    @if ($incident->technical_status === 'corregida' && $incident->resolved_at)
+                        <span>Confirmada por {{ $incident->repairResolver?->name ?? 'usuario autorizado' }} · {{ $incident->resolved_at->format('d/m/Y H:i') }}</span>
+                    @endif
+                </div>
+                @if ($incident->maintenances_count > 0)
+                    <p class="text-sm">Intervenciones correctivas asociadas: {{ $incident->maintenances_count }} · <a class="text-indigo-700 underline dark:text-indigo-300" href="{{ route('maintenances.history', ['camera' => $incident->camera_id]) }}" wire:navigate>Ver historial de la cámara</a></p>
+                @endif
+                @if ($incident->technical_status === 'pendiente' && ! $incident->camera->trashed())
+                    @can('create-maintenances')
+                        <flux:button size="sm" :href="route('maintenances.create-for-incident', ['incident' => $incident->id])" wire:navigate>Registrar mantenimiento correctivo</flux:button>
+                    @endcan
+                @endif
                 @if ($suggestion)
                     <div class="rounded-lg border-l-4 border-indigo-500 bg-indigo-50 p-3 text-sm dark:bg-indigo-950">
                         <p class="font-semibold">Sugerencia IA: {{ \App\Enums\IncidentCategory::tryFrom($suggestion->suggested_category)?->label() }}</p>

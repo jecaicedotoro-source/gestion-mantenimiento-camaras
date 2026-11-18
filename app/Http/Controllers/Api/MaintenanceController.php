@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\MaintenanceRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,10 @@ class MaintenanceController extends Controller
         Request $request,
         MaintenanceRegistrationService $service
     ): JsonResponse {
-        $maintenance = $service->register($request->all());
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 401);
+
+        $maintenance = $service->register($request->all(), $actor);
 
         return response()->json([
             'message' => 'Mantenimiento registrado correctamente.',
