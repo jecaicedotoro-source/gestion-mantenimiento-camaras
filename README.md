@@ -4,6 +4,10 @@
 
 Sistema web para la Ciudadela Pampalinda de la Universidad Santiago de Cali. Este repositorio continúa el MVP existente; su alcance prioritario es **CU-01: registrar una cámara de seguridad**. La clasificación asistida de incidencias es una funcionalidad complementaria que requiere decisión humana.
 
+## Manual de usuario
+
+Consulta el [manual de usuario USC v1.0](docs/manual-usuario.md) para instrucciones paso a paso sobre inventario, incidencias, clasificación asistida por IA, mantenimientos y HU-12. La documentación incluye capturas de pantalla en `docs/img/manual-usuario/`.
+
 ## Objetivos
 
 Conservar el inventario y apoyar su mantenimiento mediante autenticación institucional, permisos por rol, validaciones y persistencia verificable.
