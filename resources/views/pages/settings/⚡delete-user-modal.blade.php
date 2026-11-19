@@ -2,6 +2,7 @@
 
 use App\Concerns\PasswordValidationRules;
 use App\Livewire\Actions\Logout;
+use App\Services\UserManagementService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -11,7 +12,7 @@ new class extends Component {
     public string $password = '';
 
     /**
-     * Delete the currently authenticated user.
+     * Conservar la identidad al cerrar voluntariamente una cuenta no administrativa.
      */
     public function deleteUser(Logout $logout): void
     {
@@ -19,7 +20,8 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        app(UserManagementService::class)->deactivateOwn(Auth::user());
+        $logout();
 
         $this->redirect('/', navigate: true);
     }
@@ -28,22 +30,22 @@ new class extends Component {
 <flux:modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
     <form method="POST" wire:submit="deleteUser" class="space-y-6">
         <div>
-            <flux:heading size="lg">{{ __('Are you sure you want to delete your account?') }}</flux:heading>
+            <flux:heading size="lg">¿Quieres desactivar tu cuenta?</flux:heading>
 
             <flux:subheading>
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+                Se conservarán tu identidad y tus historiales. Perderás el acceso hasta que un administrador reactive la cuenta. Introduce tu contraseña para confirmar.
             </flux:subheading>
         </div>
 
-        <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
+        <flux:input wire:model="password" label="Contraseña" type="password" viewable />
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
-                <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                <flux:button variant="filled">Cancelar</flux:button>
             </flux:modal.close>
 
             <flux:button variant="danger" type="submit" data-test="confirm-delete-user-button">
-                {{ __('Delete account') }}
+                Desactivar cuenta
             </flux:button>
         </div>
     </form>

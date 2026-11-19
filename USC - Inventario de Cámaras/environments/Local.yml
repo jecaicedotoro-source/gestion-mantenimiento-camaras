@@ -1,0 +1,8 @@
+name: Local
+variables:
+  - secret: true
+    name: api_token
+    description: Secreto (Secret)
+  - secret: true
+    name: admin_token
+    description: Secreto (Secret)

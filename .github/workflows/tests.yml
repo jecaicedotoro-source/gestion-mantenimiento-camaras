@@ -4,14 +4,23 @@ on:
   push:
     branches:
       - main
+      - codex/consolidacion-mvp-usc
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_ENABLED: "false"
+      OPENAI_API_KEY: ""
 
     steps:
       - name: Checkout code
@@ -24,6 +33,7 @@ jobs:
         with:
           php-version: '8.5'
           tools: composer:v2
+          extensions: intl, mbstring, pdo_sqlite, sqlite3, zip
           coverage: none
 
       - name: Setup Node
@@ -31,8 +41,138 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Setup Application
-        run: composer setup
+      - name: Instalar dependencias PHP bloqueadas
+        id: dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Run CI Checks
-        run: composer ci:check
+      - name: Preparar aplicación y SQLite aislado
+        id: application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          php artisan key:generate --no-interaction
+          php artisan migrate --force --no-interaction
+
+      - name: Compilar recursos con dependencias bloqueadas
+        run: |
+          npm ci
+          npm run build
+
+      - name: Comprobar formato PHP
+        run: vendor/bin/pint --test
+
+      - name: Analizar tipos y arquitectura
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      - name: Ejecutar pruebas y generar evidencia JUnit
+        if: ${{ !cancelled() && steps.application.outcome == 'success' }}
+        run: |
+          mkdir -p build/test-results
+          vendor/bin/pest --no-coverage --log-junit build/test-results/junit.xml
+
+      - name: Conservar resultado de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruebas-junit
+          path: build/test-results/junit.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Preparar configuración efímera sin claves externas
+        shell: bash
+        run: |
+          cp .env.example .env
+          # La clave local solo cifra datos ficticios de este contenedor de CI.
+          app_key="base64:$(openssl rand -base64 32)"
+          printf '\nAPP_KEY=%s\nOPENAI_ENABLED=false\nOPENAI_API_KEY=\n' "$app_key" >> .env
+          unset app_key
+
+      - name: Construir imagen de producción
+        run: docker compose build --pull
+
+      - name: Iniciar aplicación y esperar su healthcheck
+        run: docker compose up -d --wait --wait-timeout 120
+
+      - name: Verificar HTTP recursos compilados y persistencia SQLite
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:8000/up > /dev/null
+          docker compose exec -T app test -s public/build/manifest.json
+          docker compose exec -T app test -s /app/storage/app/data/database.sqlite
+          docker compose exec -T app php artisan migrate:status --no-ansi
+
+      - name: Demostrar CU-01 mediante HTTP y conservar el registro tras reiniciar
+        shell: bash
+        run: |
+          # El token efímero se captura; nunca se imprime ni forma parte de artefactos.
+          api_token="$(docker compose exec -T app php <<'PHP'
+          <?php
+          require '/app/vendor/autoload.php';
+          $app = require '/app/bootstrap/app.php';
+          $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+          $role = App\Models\Role::firstOrCreate(['code' => 'administrador'], ['name' => 'Administrador CI']);
+          $user = new App\Models\User;
+          $user->name = 'Operador CI';
+          $user->email = 'smoke@example.test';
+          $user->password = bin2hex(random_bytes(24));
+          $user->role_id = $role->id;
+          $user->email_verified_at = now();
+          $user->is_active = true;
+          $user->saveOrFail();
+          echo $user->createToken('ci-smoke', ['*'], now()->addMinutes(10))->plainTextToken;
+          PHP
+          )"
+          test -n "$api_token"
+          mkdir -p build/smoke
+          payload='{"codigo_inventario":"CI-CU01","numero_serie":"CI-SERIE-001","marca":"Marca ficticia","modelo":"CI","tipo":"IP","ubicacion":"Entorno CI aislado","estado":"activo"}'
+          status="$(curl --silent --show-error --output build/smoke/camera-created.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $api_token" --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' --data "$payload" http://127.0.0.1:8000/api/cameras)"
+          test "$status" = 201
+          camera_id="$(python3 -c 'import json; print(json.load(open("build/smoke/camera-created.json"))["data"]["id"])')"
+          status="$(curl --silent --show-error --output build/smoke/duplicate-validation.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $api_token" --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' --data "$payload" http://127.0.0.1:8000/api/cameras)"
+          test "$status" = 422
+          curl --fail --silent --show-error --header "Authorization: Bearer $api_token" \
+            --header 'Accept: application/json' --output build/smoke/camera-before-restart.json \
+            "http://127.0.0.1:8000/api/cameras/$camera_id"
+          docker compose restart app
+          # Esperar salud evita consultar durante el cierre y la reapertura del servidor.
+          docker compose up -d --wait --wait-timeout 120
+          curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/up > /dev/null
+          curl --fail --silent --show-error --header "Authorization: Bearer $api_token" \
+            --header 'Accept: application/json' --output build/smoke/camera-after-restart.json \
+            "http://127.0.0.1:8000/api/cameras/$camera_id"
+          python3 -c 'import json; before=json.load(open("build/smoke/camera-before-restart.json"))["data"]; after=json.load(open("build/smoke/camera-after-restart.json"))["data"]; assert before == after; assert after["numero_serie"] == "CI-SERIE-001"'
+          # Solo datos sintéticos: esta línea permite conservar evidencia sin tokens fuera de artefactos temporales.
+          python3 -c 'import json,pathlib; evidence={p.stem:json.loads(p.read_text()) for p in pathlib.Path("build/smoke").glob("*.json")}; print("EVIDENCIA_HTTP_CU01="+json.dumps(evidence,ensure_ascii=True,separators=(",",":")))'
+          unset api_token
+          docker compose exec -T app php artisan migrate:status --no-ansi
+
+      - name: Conservar respuestas HTTP sin credenciales
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demostracion-http-cu01
+          path: build/smoke/*.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Mostrar diagnóstico si falla el contenedor
+        if: failure()
+        run: docker compose logs --no-color --tail 100
+
+      - name: Retirar únicamente los recursos efímeros de CI
+        if: always()
+        run: docker compose down --volumes

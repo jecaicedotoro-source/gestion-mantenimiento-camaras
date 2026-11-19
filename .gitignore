@@ -38,3 +38,11 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+
+# Configuración temporal para las comprobaciones locales de acceso de PHP en Windows.
+/phpunit.windows.xml
+/storage/app/backups/
+/storage/framework/*-test-views/
+/build/
+.env.*
+!.env.example

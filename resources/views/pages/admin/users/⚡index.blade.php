@@ -2,11 +2,10 @@
 
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Services\UserManagementService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -15,369 +14,174 @@ use Livewire\WithPagination;
 new class extends Component {
     use WithPagination;
 
-    // Estado de la interfaz
     public bool $showForm = false;
     public string $search = '';
-
-    // Identificadores protegidos contra modificaciones del navegador
     #[Locked]
     public ?int $editingUserId = null;
-
     #[Locked]
     public ?int $deletingUserId = null;
-
     public string $deletingUserName = '';
-
-    // Campos del formulario
     public string $newName = '';
     public string $newEmail = '';
     public string $newRoleId = '';
     public string $newPassword = '';
     public string $newPasswordConfirmation = '';
 
-    /**
-     * Autorizar todas las solicitudes del componente.
-     */
+    /** La autorización se revalida en cada solicitud Livewire. */
     public function boot(): void
     {
-        Gate::authorize('manage-users');
+        Gate::authorize('viewAny', User::class);
     }
 
-    /**
-     * Consultar usuarios con búsqueda y paginación.
-     */
     #[Computed]
     public function users()
     {
         $search = trim($this->search);
 
-        return User::query()
-            ->with('role')
+        return User::query()->with('role')
             ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%')->orWhere('email', 'like', '%' . $search . '%');
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%');
                 });
-            })
-            ->orderBy('name')
-            ->paginate(10);
+            })->orderBy('name')->paginate(10);
     }
 
-    /**
-     * Obtener roles institucionales.
-     */
     #[Computed]
     public function roles()
     {
         return Role::query()->orderBy('name')->get();
     }
 
-    /**
-     * Reiniciar la paginación al buscar.
-     */
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
 
-    /**
-     * Reglas de validación para crear y editar.
-     */
-    protected function rules(): array
-    {
-        $uniqueEmail = Rule::unique('users', 'email');
-
-        if ($this->editingUserId !== null) {
-            $uniqueEmail->ignore($this->editingUserId);
-        }
-
-        $passwordRule = Password::min(12)->mixedCase()->numbers()->symbols();
-
-        return [
-            'newName' => ['required', 'string', 'min:3', 'max:255'],
-
-            'newEmail' => ['required', 'email:rfc', 'max:255', $uniqueEmail],
-
-            'newRoleId' => ['required', 'integer', Rule::exists('roles', 'id')],
-
-            'newPassword' => $this->editingUserId === null ? ['required', 'string', $passwordRule] : ['nullable', 'string', $passwordRule],
-
-            'newPasswordConfirmation' => $this->editingUserId === null ? ['required', 'same:newPassword'] : ['nullable', 'required_with:newPassword', 'same:newPassword'],
-        ];
-    }
-
-    /**
-     * Preparar formulario de creación.
-     */
     public function openCreateForm(): void
     {
-        Gate::authorize('manage-users');
-
+        Gate::authorize('create', User::class);
         $this->cancelDelete();
-
-        $this->reset('newName', 'newEmail', 'newRoleId', 'newPassword', 'newPasswordConfirmation', 'editingUserId');
-
-        $this->resetValidation();
-
+        $this->cancelForm();
         $this->showForm = true;
     }
 
-    /**
-     * Cargar usuario para edición.
-     */
     public function editUser(int $id): void
     {
-        Gate::authorize('manage-users');
-
         $user = User::findOrFail($id);
-
+        Gate::authorize('update', $user);
         $this->cancelDelete();
         $this->resetValidation();
-
         $this->editingUserId = $user->id;
-
         $this->newName = $user->name;
         $this->newEmail = $user->email;
         $this->newRoleId = (string) ($user->role_id ?? '');
-
-        // Nunca mostrar la contraseña almacenada.
+        // Nunca trasladar el hash a una propiedad visible del navegador.
         $this->newPassword = '';
         $this->newPasswordConfirmation = '';
-
         $this->showForm = true;
     }
 
-    /**
-     * Cancelar creación o edición.
-     */
     public function cancelForm(): void
     {
         $this->reset('showForm', 'editingUserId', 'newName', 'newEmail', 'newRoleId', 'newPassword', 'newPasswordConfirmation');
-
         $this->resetValidation();
     }
 
-    /**
-     * Validar datos sin guardarlos.
-     */
     public function validateNewUser(): void
     {
-        Gate::authorize('manage-users');
-
-        $this->normalizeForm();
-
-        $this->validate();
-
+        $this->manage(fn () => app(UserManagementService::class)->validate(
+            Auth::user(), $this->payload(), $this->editingUserId === null ? null : User::findOrFail($this->editingUserId),
+        ));
         session()->flash('validated', 'Los datos cumplen las reglas de validación.');
     }
 
-    /**
-     * Normalizar nombre y correo.
-     */
-    protected function normalizeForm(): void
-    {
-        $this->newName = trim($this->newName);
-
-        $this->newEmail = strtolower(trim($this->newEmail));
-    }
-
-    /**
-     * Decidir si se crea o actualiza un usuario.
-     */
     public function saveUser(): void
     {
-        Gate::authorize('manage-users');
-
-        if ($this->editingUserId === null) {
-            $this->createUser();
-        } else {
-            $this->updateUser();
-        }
+        $this->editingUserId === null ? $this->createUser() : $this->updateUser();
     }
 
-    /**
-     * Registrar un nuevo usuario institucional.
-     */
     public function createUser(): void
     {
-        Gate::authorize('manage-users');
-
-        if ($this->editingUserId !== null) {
-            abort(409, 'El formulario está en modo edición.');
-        }
-
-        $this->normalizeForm();
-
-        $data = $this->validate();
-
-        $user = new User();
-
-        $user->name = $data['newName'];
-        $user->email = $data['newEmail'];
-        $user->role_id = (int) $data['newRoleId'];
-
-        // El modelo User aplica automáticamente el hash.
-        $user->password = $data['newPassword'];
-
-        $user->saveOrFail();
-
-        // Activar el proceso estándar de verificación.
-        event(new Registered($user));
-
+        abort_if($this->editingUserId !== null, 409, 'El formulario está en modo edición.');
+        $this->manage(fn () => app(UserManagementService::class)->create(Auth::user(), $this->payload()));
         $this->finishForm('Usuario institucional registrado correctamente.');
     }
 
-    /**
-     * Actualizar un usuario existente.
-     */
     public function updateUser(): void
     {
-        Gate::authorize('manage-users');
-
-        if ($this->editingUserId === null) {
-            abort(409, 'No hay un usuario seleccionado.');
-        }
-
-        $user = User::with('role')->findOrFail($this->editingUserId);
-
-        $this->normalizeForm();
-
-        $data = $this->validate();
-
-        $newRoleId = (int) $data['newRoleId'];
-
-        // No permitir que un administrador cambie su propio rol.
-        if ((int) $user->id === (int) Auth::id() && (int) $user->role_id !== $newRoleId) {
-            $this->addError('newRoleId', 'No puedes modificar tu propio rol institucional.');
-
-            return;
-        }
-
-        // Evitar dejar el sistema sin administradores.
-        if ($user->role?->code === 'administrador' && (int) $user->role_id !== $newRoleId && User::where('role_id', $user->role_id)->count() <= 1) {
-            $this->addError('newRoleId', 'Debe permanecer al menos un administrador.');
-
-            return;
-        }
-
-        $emailChanged = $user->email !== $data['newEmail'];
-
-        $user->name = $data['newName'];
-        $user->email = $data['newEmail'];
-        $user->role_id = $newRoleId;
-
-        // Cambiar contraseña solo si se proporciona una nueva.
-        if (!empty($data['newPassword'])) {
-            $user->password = $data['newPassword'];
-        }
-
-        // Un correo modificado debe verificarse nuevamente.
-        if ($emailChanged) {
-            $user->email_verified_at = null;
-        }
-
-        $user->saveOrFail();
-
-        if ($emailChanged) {
-            $user->sendEmailVerificationNotification();
-        }
-
+        abort_if($this->editingUserId === null, 409, 'No hay un usuario seleccionado.');
+        $this->manage(fn () => app(UserManagementService::class)->update(
+            Auth::user(), User::findOrFail($this->editingUserId), $this->payload(),
+        ));
         $this->finishForm('Usuario institucional actualizado correctamente.');
     }
 
-    /**
-     * Finalizar creación o edición.
-     */
-    protected function finishForm(string $message): void
-    {
-        $this->cancelForm();
-
-        $this->resetPage();
-
-        session()->flash('success', $message);
-    }
-
-    /**
-     * Comprobar si un usuario puede eliminarse.
-     */
-    protected function deletionError(User $user): ?string
-    {
-        if ((int) $user->id === (int) Auth::id()) {
-            return 'No puedes eliminar tu propia cuenta.';
-        }
-
-        if ($user->role?->code === 'administrador' && User::where('role_id', $user->role_id)->count() <= 1) {
-            return 'No puedes eliminar al último administrador.';
-        }
-
-        return null;
-    }
-
-    /**
-     * Solicitar confirmación de eliminación.
-     */
+    /** Se conserva el nombre de la acción existente; ahora solicita desactivación. */
     public function confirmDelete(int $id): void
     {
-        Gate::authorize('manage-users');
-
-        $this->resetValidation();
-
-        $user = User::with('role')->findOrFail($id);
-
-        $error = $this->deletionError($user);
-
-        if ($error !== null) {
-            $this->addError('operation', $error);
-            return;
-        }
-
+        $user = User::findOrFail($id);
+        Gate::authorize('deactivate', $user);
         $this->cancelForm();
-
         $this->deletingUserId = $user->id;
         $this->deletingUserName = $user->name;
     }
 
-    /**
-     * Cancelar eliminación.
-     */
     public function cancelDelete(): void
     {
         $this->reset('deletingUserId', 'deletingUserName');
-
         $this->resetValidation();
     }
 
-    /**
-     * Eliminar usuario tras confirmar.
-     */
+    /** La identidad y sus relaciones se conservan; el servicio revoca accesos. */
     public function deleteUser(): void
     {
-        Gate::authorize('manage-users');
-
-        if ($this->deletingUserId === null) {
-            abort(409, 'No hay un usuario seleccionado.');
-        }
-
-        $user = User::with('role')->findOrFail($this->deletingUserId);
-
-        // Revalidar las restricciones antes de eliminar.
-        $error = $this->deletionError($user);
-
-        if ($error !== null) {
-            $this->addError('operation', $error);
-            return;
-        }
-
-        $user->delete();
-
+        abort_if($this->deletingUserId === null, 409, 'No hay un usuario seleccionado.');
+        $this->manage(fn () => app(UserManagementService::class)->deactivate(Auth::user(), User::findOrFail($this->deletingUserId)));
         $this->cancelDelete();
-
         $this->resetPage();
-
-        session()->flash('success', 'Usuario institucional eliminado correctamente.');
+        session()->flash('success', 'Cuenta desactivada. Se conservan su identidad y sus historiales.');
     }
-};
-?>
 
+    public function reactivateUser(int $id): void
+    {
+        $this->manage(fn () => app(UserManagementService::class)->reactivate(Auth::user(), User::findOrFail($id)));
+        session()->flash('success', 'Cuenta reactivada. El usuario debe iniciar sesión nuevamente.');
+    }
+
+    private function finishForm(string $message): void
+    {
+        $this->cancelForm();
+        $this->resetPage();
+        session()->flash('success', $message);
+    }
+
+    /** Adaptar únicamente los campos de presentación al contrato del servicio. */
+    private function payload(): array
+    {
+        return [
+            'name' => $this->newName,
+            'email' => $this->newEmail,
+            'role_id' => $this->newRoleId,
+            'password' => $this->newPassword === '' && $this->editingUserId !== null ? null : $this->newPassword,
+            'password_confirmation' => $this->newPasswordConfirmation,
+        ];
+    }
+
+    /** Mantener los errores de aplicación asociados al formulario visible. */
+    private function manage(callable $operation): mixed
+    {
+        try {
+            return $operation();
+        } catch (ValidationException $exception) {
+            $fields = ['name' => 'newName', 'email' => 'newEmail', 'role_id' => 'newRoleId', 'password' => 'newPassword'];
+            $errors = [];
+            foreach ($exception->errors() as $key => $messages) {
+                $errors[$fields[$key] ?? $key] = $messages;
+            }
+            throw ValidationException::withMessages($errors);
+        }
+    }
+}; ?>
 <div class="mx-auto max-w-6xl space-y-6 p-6">
 
     {{-- ENCABEZADO --}}
@@ -532,30 +336,30 @@ new class extends Component {
     @endif
 
 
-    {{-- CONFIRMACIÓN DE ELIMINACIÓN --}}
+    {{-- CONFIRMACIÓN DE DESACTIVACIÓN --}}
 
     @if ($deletingUserId !== null)
         <div class="rounded-xl border border-red-300 bg-red-50 p-5 dark:border-red-900 dark:bg-red-950/20">
 
             <h2 class="font-semibold text-red-700 dark:text-red-400">
-                Confirmar eliminación
+                Confirmar desactivación
             </h2>
 
             <p class="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-                ¿Estás seguro de eliminar al usuario
+                ¿Estás seguro de desactivar al usuario
                 <strong>{{ $deletingUserName }}</strong>?
             </p>
 
             <p class="mt-2 text-sm text-red-600 dark:text-red-400">
-                Esta operación elimina la cuenta de la base de datos.
-                No se puede deshacer desde esta pantalla.
+                La cuenta conservará su identidad y su historial.
+                Se revocarán las sesiones y los tokens. Puedes reactivarla posteriormente.
             </p>
 
             <div class="mt-4 flex flex-wrap gap-3">
 
                 <flux:button variant="danger" wire:click="deleteUser" wire:loading.attr="disabled"
                     wire:target="deleteUser">
-                    Sí, eliminar usuario
+                    Sí, desactivar usuario
                 </flux:button>
 
                 <flux:button variant="ghost" wire:click="cancelDelete">
@@ -590,7 +394,7 @@ new class extends Component {
                     <th class="p-3">Nombre</th>
                     <th class="p-3">Correo electrónico</th>
                     <th class="p-3">Rol</th>
-                    <th class="p-3">Verificación</th>
+                    <th class="p-3">Estado</th>
                     <th class="p-3">Acciones</th>
                 </tr>
 
@@ -613,18 +417,9 @@ new class extends Component {
                             {{ $user->role?->name ?? 'Sin rol' }}
                         </td>
 
+
                         <td class="p-3">
-
-                            @if ($user->hasVerifiedEmail())
-                                <span class="text-green-600 dark:text-green-400">
-                                    Verificado
-                                </span>
-                            @else
-                                <span class="text-amber-600 dark:text-amber-400">
-                                    Pendiente
-                                </span>
-                            @endif
-
+                            <span class="{{ $user->is_active ? 'text-teal-700 dark:text-teal-300' : 'text-amber-700 dark:text-amber-300' }}">{{ $user->is_active ? 'Activo' : 'Desactivado' }}</span>
                         </td>
 
                         <td class="p-3">
@@ -636,10 +431,11 @@ new class extends Component {
                                 </flux:button>
 
                                 @if ((int) $user->id !== (int) auth()->id())
-                                    <flux:button size="sm" variant="danger"
-                                        wire:click="confirmDelete({{ $user->id }})">
-                                        Eliminar
-                                    </flux:button>
+                                    @if ($user->is_active)
+                                        <flux:button size="sm" variant="danger" wire:click="confirmDelete({{ $user->id }})">Desactivar</flux:button>
+                                    @else
+                                        <flux:button size="sm" wire:click="reactivateUser({{ $user->id }})" wire:loading.attr="disabled">Reactivar</flux:button>
+                                    @endif
                                 @else
                                     <span class="text-xs text-zinc-500">
                                         Tu cuenta
@@ -675,3 +471,5 @@ new class extends Component {
     </div>
 
 </div>
+
+

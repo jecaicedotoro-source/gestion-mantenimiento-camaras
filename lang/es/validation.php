@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'accepted' => 'Debes aceptar :attribute antes de continuar.',
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'enum' => 'El valor seleccionado para :attribute no es válido.',
+    'in' => 'El valor seleccionado para :attribute no es válido.',
+    'ip' => 'El campo :attribute debe contener una dirección IP válida.',
+    'regex' => 'El formato de :attribute no es válido.',
+    'size' => ['string' => 'El campo :attribute debe contener :size caracteres.'],
+    'confirmed' => 'La confirmación de :attribute no coincide.',
     'required' => 'El campo :attribute es obligatorio.',
     'email' => 'El campo :attribute debe contener un correo electrónico válido.',
     'string' => 'El campo :attribute debe contener texto.',
@@ -41,6 +49,15 @@ return [
     ],
 
     'attributes' => [
+        'shareApproved' => 'la autorización de envío',
+        'consent' => 'la autorización de envío',
+        'cameraId' => 'cámara',
+        'camera_id' => 'cámara',
+        'description' => 'descripción',
+        'category' => 'categoría',
+        'codigo_inventario' => 'código de inventario',
+        'numero_serie' => 'número de serie',
+        'direccion_ip' => 'dirección IP',
         'newName' => 'nombre completo',
         'newEmail' => 'correo electrónico',
         'newRoleId' => 'rol institucional',

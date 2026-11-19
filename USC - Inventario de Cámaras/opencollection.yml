@@ -1,0 +1,10 @@
+opencollection: 1.0.0
+
+info:
+  name: USC - Inventario de Cámaras
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
